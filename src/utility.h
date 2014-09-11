@@ -17,13 +17,14 @@ namespace jusha {
 #define __JUSHA_FUNC__ __PRETTY_FUNCTION__
 #endif
 
-#define jassert(expression) \
-  ((expression) ? (void) 0  \
-   : jusha_assert_fail(#expression, __FILE__, __LINE__, __JUSHA_FUNC__))
-
 
 
 void check_cuda_error(const char *kernelname, const char *file, int line_no, cudaStream_t stream = 0);
 
 
 }
+
+#define jassert(expression)       \
+  ((expression) ? (void) 0  \
+   : jusha::jusha_assert_fail(#expression, __FILE__, __LINE__, __JUSHA_FUNC__))
+

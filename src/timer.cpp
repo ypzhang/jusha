@@ -13,7 +13,7 @@ namespace jusha {
                           is_synced(true)
   {
     cudaError_t error = cudaEventCreate(&begin_event);
-    assert(error == cudaSuccess);
+    jassert(error == cudaSuccess);
     error = cudaEventCreate(&end_event);
     assert(error == cudaSuccess);
     check_cuda_error("after event start", __FILE__, __LINE__);
@@ -55,8 +55,11 @@ namespace jusha {
     check_cuda_error("after event start", __FILE__, __LINE__);
   }
 
-  void CudaEvent::print() {
-    printf(" min: %1.5fs @%d, max %1.5fs @%d, total %1.5fs, avg %1.5fs, max/min %1.5f, avg/min %1.5f, count %d \n", _min/1000.f, _min_count, _max/1000.f, _max_count, _total/1000.f, get_avg()/1000.f, _max/_min, get_avg()/_min, _count );
+  void CudaEvent::print(bool terse) {
+    if (terse)
+      printf(" %1.12f \n",get_avg()/1000.f);
+    else
+      printf(" min: %1.12fs @%d, max %1.12fs @%d, total %1.12fs, avg %1.12fs, max/min %1.12f, avg/min %1.12f, count %d \n", _min/1000.f, _min_count, _max/1000.f, _max_count, _total/1000.f, get_avg()/1000.f, _max/_min, get_avg()/_min, _count );
   }
 
 
@@ -102,14 +105,28 @@ namespace jusha {
   }
 
 
-  void cuda_event_print() {
-    printf("************* outputing event stats ******************\n");
+  void cuda_event_print(bool terse) {
+    if (!terse)
+      printf("************* outputing event stats ******************\n");
     std::map<std::string, CudaEvent>::iterator iter;
-    for (iter = g_cuda_events.begin(); iter != g_cuda_events.end(); ++iter)
-      {
-        printf("event %40s: ",  (*iter).first.c_str());
-        (*iter).second.print();
-      }
-    printf("******************************************************\n");
+    if (terse) {
+      for (iter = g_cuda_events.begin(); iter != g_cuda_events.end(); ++iter)
+        {
+          printf("%40s\n",  (*iter).first.c_str());
+        }
+      printf("\n");
+      for (iter = g_cuda_events.begin(); iter != g_cuda_events.end(); ++iter)
+        {
+          (*iter).second.print(terse);
+        }
+    } else {
+      for (iter = g_cuda_events.begin(); iter != g_cuda_events.end(); ++iter)
+        {
+          printf("%40s  ",  (*iter).first.c_str());
+          (*iter).second.print(terse);
+        }
+    }
+    if (!terse)
+      printf("******************************************************\n");
   }
 }

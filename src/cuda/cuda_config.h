@@ -7,7 +7,7 @@ namespace jusha {
     #define JC_cuda_warpsize_shift 5
     #define JC_cuda_warpsize_mask  0x1F
     #define JC_cuda_blocksize      256
-    #define JC_cuda_max_blocks     256
+    #define JC_cuda_max_blocks     64
     #define JC_cuda_warpsize       32
 
     class JCKonst {
@@ -21,8 +21,9 @@ namespace jusha {
     };
 
 
-    #define CAP_BLOCK_SIZE(block) (block > JCKonst::cuda_max_blocks ? JCKonst::cuda_max_blocks:block)
-    #define GET_BLOCKS(N) CAP_BLOCK_SIZE( (N + JCKonst::cuda_blocksize -1 )/JCKonst::cuda_blocksize)
 
   }
 }
+
+#define CAP_BLOCK_SIZE(block) (block > jusha::cuda::JCKonst::cuda_max_blocks ? jusha::cuda::JCKonst::cuda_max_blocks:block)
+#define GET_BLOCKS(N) CAP_BLOCK_SIZE( (N + jusha::cuda::JCKonst::cuda_blocksize -1 )/jusha::cuda::JCKonst::cuda_blocksize)

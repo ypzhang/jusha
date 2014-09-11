@@ -17,9 +17,9 @@ namespace jusha {
 
     template <typename T>
     bool is_equal(thrust::device_ptr<T> lhs_first,
-                   thrust::device_ptr<T> lhs_last,
-                   thrust::device_ptr<T> rhs_first,
-                   cudaStream_t stream)
+                  thrust::device_ptr<T> lhs_last,
+                  thrust::device_ptr<T> rhs_first,
+                  cudaStream_t stream = 0)
     {
       thrust::device_vector<int> equal(1, 0);
       //      thrust::transform_if(first, last, second_first, output, srt_ns::cuda::is_not_equal_functor<T>());
@@ -29,7 +29,7 @@ namespace jusha {
       int blocks = GET_BLOCKS(N);
 
       if (blocks > 0)
-        raise_non_equal_flag<<<blocks, JCKonst::cuda_blocksize, 0, stream>>>(first.get(), second_first.get(), equal.data(), N);
+        raise_non_equal_flag<<<blocks, JCKonst::cuda_blocksize, 0, stream>>>(lhs_first.get(), rhs_first.get(), equal.data().get(), N);
       thrust::device_vector<int> equal_host = equal;
       return (equal_host[0] == 0);
     }

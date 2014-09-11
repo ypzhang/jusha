@@ -11,8 +11,8 @@
 
 
 void test_scan_cuda(const char *case_name, int _size) {
-  thrust::device_vector<uint> d_src_vec((_size+31)/32);
-  thrust::device_vector<uint> d_dst_vec(_size);
+  thrust::device_vector<unsigned int> d_src_vec((_size+31)/32);
+  thrust::device_vector<unsigned int> d_dst_vec(_size);
 
   thrust::fill(d_src_vec.begin(), d_src_vec.end(), 0xFFFFFFFF);
 

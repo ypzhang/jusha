@@ -9,7 +9,7 @@ namespace jusha {
     void start(cudaStream_t stream = 0);
     void stop(cudaStream_t stream = 0);
     void sync();
-    void print();
+    void print(bool terse);
     void destroy();
     float get_min() const { return _min; }
     float get_max() const { return _max; }
@@ -31,6 +31,6 @@ namespace jusha {
   void cuda_event_stop(const char*, cudaStream_t stream = 0);
   void cuda_event_sync();
   void cuda_event_destroy();
-  void cuda_event_print() ;
+  void cuda_event_print(bool terse = false) ;
 }
 
