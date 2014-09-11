@@ -1,0 +1,16 @@
+% !TEX root = xelatex_main.tex
+\chapter{优化一个简单内核}
+
+让我们从一个简单的例子来看看优化CUDA有什么技巧。这个例子的任务是用内核函数来实现两块GPU内存之间的拷贝。从功能上来说这是CUDA提供的cudaMemcpy的一种（cudaMemcpyDeviceToDevice)，貌似没有什么必要，但是我们可以和这个API做一下性能上的比较，看看我们的实现是否能比CUDA提供的功能快。同时也能理解一下使用coalesced memory access的要求。
+
+作为格调更高的C++程序员，我们当然情不自禁地从模版开始码字了：template <typename T> ...，第一版本如下：
+\myvspace
+\lstinputlisting[language=C++]{\JushaBase/tests/src/d2d_direct.cu}
+代码很简单，无非就是一个循环（第3，4行）把输入拷到输出。内核调用的时候用了一下jusha里提供的缺省的blockDim和gridDim（第9，10行）。
+如果直接用CUDA提供的cudaMemcpy的话，就一句，更简单：
+\myvspace
+\lstinputlisting[language=C++]{\JushaBase/tests/src/cudamemcpy.cu}
+
+首先我们来比较一下性能，这里画出不同数据大小在各种数据类型的测量带宽曲线，类型有char, int/float, double, float3, float4。
+
+可以看到cudaMemcpy性能非常稳定，不管是任何类型，在  处都能达到理论带宽的％。而我们写的函数则优劣不齐。好的数据

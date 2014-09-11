@@ -1,0 +1,95 @@
+
+
+%\documentclass[12pt,a4paper]{book}
+\documentclass[12pt,a4paper]{book}
+
+\input{mysetting.tex}
+\usepackage[CJKbookmarks, colorlinks,
+bookmarksnumbered=true,
+pdfstartview=FitH,
+linkcolor=black]{hyperref}
+
+%\usepackage{geometry} % 設定邊界
+%\geometry{
+ % top=1in,
+  %inner=1in,
+  %outer=1in,
+  %bottom=1in,
+  %headheight=3ex,
+  %headsep=2ex
+%}
+% fc-list : lang=zh
+\usepackage{fontspec} % 允許設定字體
+\usepackage{xeCJK} % 分開設置中英文字型
+%\setCJKmainfont{LiHei Pro} % NOT OK
+\setCJKmainfont{STFangsong}  % OK
+%\setCJKmainfont{Yuanti SC} %OK
+%\setCJKmainfont{STHeiti} %OK
+%\setCJKmainfont{LiSong Pro} % NOT OK
+%\setCJKmainfont{STKaiti} %OK
+%\setCJKmainfont{Kai} %OK
+%\setCJKmainfont{Kaiti TC} % Traditional Chinese OK!
+%\setCJKmainfont{Wawati SC} % 娃娃体
+%\setCJKmainfont{Lantinghei SC} %WORKING
+%\setCJKmainfont{Libian SC} %WORKING
+%\setCJKmainfont{Source Han Sans CN ExtraLight} % NOT WORKING
+
+%set jusha source code base
+\newcommand{\JushaBase}{../jusha}
+%
+\setmainfont{Georgia} % 設定英文字型
+\setromanfont{Georgia} % 字型
+\setmonofont{Courier New}
+\linespread{1.2}\selectfont % 行距
+\XeTeXlinebreaklocale "zh" % 針對中文自動換行
+\XeTeXlinebreakskip = 0pt plus 1pt % 字與字之間加入0pt至1pt的間距，確保左右對整齊
+\parindent 0em % 段落縮進
+\setlength{\parskip}{20pt} % 段落之間的距離
+ 
+% yp: this works for simplified chinese
+\setCJKfamilyfont{pmingliu}{PMingLiU} % 設定新字型(新細明體)
+\newcommand\fontml{\CJKfamily{pmingliu}} % 新增指令\fontml應用字型
+
+% in mac list the fonts: fc-list 
+% this does not
+\setCJKfamilyfont{biaukai}{BiauKai} % 設定新字型(標階體)
+\newcommand\fontbk{\CJKfamily{biaukai}} % 新增指令\fontbk應用字型
+ 
+\title{{\huge 聚沙成塔} \\ 我的CUDA笔记}% 設置標題，使用巨大字體
+
+\author{张永鹏} % 設置作者
+%\date{February 2013} % 設置日期
+\usepackage{titling}
+\setlength{\droptitle}{-8em} % 將標題移動至頁面的上面
+ 
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\pagestyle{fancyplain}
+\lhead{\fancyplain{}{code.accelerate@gmail.com}} % 左頁首
+\chead{} % 中頁首
+\rhead{\fancyplain{}{我的CUDA笔记}} % 右頁首
+\lfoot{} % 左頁尾
+\cfoot{\fancyplain{}{\thepage\ of \pageref{LastPage}}} % 中頁尾
+\rfoot{} % 右頁尾
+ 
+\begin{document}
+ 
+\clearpage
+ 
+\maketitle % 顯示標題
+
+\begin{center}
+\vspace*{4in}
+\large{
+“乃至童子戏，聚沙为佛塔。如是诸人等，皆已成佛道。”\\
+            \par\par\par\par\par\par \par\par\par\par                          ------《妙法莲华经·方便品》
+}
+\end{center}
+
+%\tableofcontents
+% \input{xelatex_ex.tex}
+\input{overview.tex}
+\input{utility.tex}
+\input{d2d_kernel.tex}
+ 
+\end{document}
