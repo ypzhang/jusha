@@ -2,7 +2,7 @@
 % !TEX encoding = UTF-8 Unicode
 \chapter{基本工具}
 
-这章主要介绍一些个人随身携带的工具。 编程语言是C++/CUDA，并且尽可能的使用C++11标准的一些新特性。CUDA推荐6.0以上，而且越新越好。代码基本在LINUX下编译，不追求跨平台（换句话说WINDOWS拜拜了）。所有自写的代码都在jusha的namespace下，以避免和其它库冲突。
+这章主要介绍一些个人随身携带的工具。 编程语言是C++/CUDA，并且尽可能的使用C++11标准的一些新特性。CUDA推荐6.0以上，而且越新越好。代码基本在LINUX／MAC OS X下编译，不追求跨平台（换句话说WINDOWS拜拜了）。所有自写的代码都在jusha的namespace下，以避免和其它库冲突。
 
 \section{测量时间}
 我们使用CUDA的（一个）最主要原因就是对性能的高要求，所以一个好的测量时间的工具是必不可少的。在LINUX下比较常用的是gettimeofday()，WINDOWS一般用QueryPerformanceFrequency 和 QueryPerformanceCounter。这些对测量CPU的时间是比较合适的。但在CUDA里，由于CUDA内核的调用对CPU来说是异步的，如果使用上述方法的话必须非常小心，即在测量开始和结束的时候必须使用cudaDeviceSynchronize()等来保证CPU和GPU的同步，否则就会出现测量得到的时间比实际的时间要短很多的情况。另外一个方法是设置环境变量CUDA\_LAUNCH\_BLOCKING为1（缺省为0），这样的话每一个内核的调用都变成了同步调用，也就是说CPU会在内核执行完之后才返回。但这样做的缺点是程序性能会下降，因为原本CPU可以提前返回做其它的事情。所幸的是CUDA提供了一套基于event的API来帮助测量时间，内部用GPU自带的计数器，所以不占用太多CPU资源。相关的接口函数如下所列：
@@ -15,6 +15,10 @@
  
 基于这套API我们就可以简单的构造一个类把这些API包裹起来，然后定义几个函数来方便调用，这样每次加入测量就不用查手册了。
 
+\section{项目配置}
+对于项目配置，个人推荐CMake，因为这实在是跨平台的利器。不管是生成Makefile系统，还是Visual Studio的项目文件，还是Xcode，只需要写一个通用脚本就能通吃。以下提供一个最简单的生成带有CUDA文件的C++项目的CMake脚本。
+\myvspace
+\lstinputlisting{code/CMakelists.txt}
 
 \section{thrust库／头文件}
 

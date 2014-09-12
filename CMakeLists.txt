@@ -105,15 +105,11 @@ else()
 endif()
 
 
-#this must be after all set(GAMPACK* "#define HAVE...")
 #configure_file("${CMAKE_SOURCE_DIR}/src/jusha_config.h.in.cmake" "${CMAKE_BINARY_DIR}/src/jusha_config.h")
 
 add_subdirectory (tests)
 #add_subdirectory (utest)
 
-#add_executable(test_block2 src/test_block2.cpp)
-# Make the gampack headers visible without extra paths.
-#target_link_libraries (test_block2 gampack)
 
 
 # for distribution
@@ -128,18 +124,4 @@ set (CPACK_SOURCE_TZ "OFF")
 # set (CPACK_PROJECT_CONFIG_FILE "${PROJECT_BINARY_DIR}/CPackOptions.cmake")
 
 INSTALL(TARGETS jusha jusha  RUNTIME DESTINATION bin  LIBRARY DESTINATION lib  ARCHIVE DESTINATION lib)
-#install (FILES src/gampack.h src/gampack_enum.h src/gampack_error.h src/platform_config.h  ${CMAKE_BINARY_DIR}/src/gampack_config.h DESTINATION include)
-#install(DIRECTORY src/ DESTINATION include/srt FILES_MATCHING PATTERN "srt_*.h")
-#install (FILES src/tinyvec.h src/device_allocator.h src/utility.h src/scan.h src/srt/shared_ptr.h
-#         src/srt/srt_thread.h src/srt/srt_this_thread.h DESTINATION include/srt)
-#install (FILES src/srt_vector.h src/srt_threadmanager.h src/RmtXchg.h src/RmtXchg_hybrid.h 
-#         src/RmtXchg_template.h src/srt_thrust.h src/srt_thrust_cpu.h src/communicator_template.h 
-#	 src/communicator.h src/DistriObj.h src/gampack_mpi.h src/srt_exception.h 
-#         src/srt_error.h src/gampack_expert.h DESTINATION include)
-
-#install(DIRECTORY src/ DESTINATION src FILES_MATCHING PATTERN "srt_*.cpp")
-#install(DIRECTORY src/ DESTINATION src FILES_MATCHING PATTERN "srt_*.cu")
-# will rename scan.h to srt_scan.h
-#install (FILES src/scan.h DESTINATION include/srt)
-
 include (CPack)
