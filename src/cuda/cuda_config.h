@@ -1,4 +1,5 @@
 #pragma once
+#include <cuda_runtime_api.h>
 
 namespace jusha {
   namespace cuda {
@@ -20,10 +21,18 @@ namespace jusha {
 
     };
 
-
+    __inline__ void get_cuda_property(cudaDeviceProp &property) {
+      int gpu; cudaGetDevice(&gpu);
+      cudaGetDeviceProperties(&property, gpu);
+    }
 
   }
 }
 
+
 #define CAP_BLOCK_SIZE(block) (block > jusha::cuda::JCKonst::cuda_max_blocks ? jusha::cuda::JCKonst::cuda_max_blocks:block)
 #define GET_BLOCKS(N) CAP_BLOCK_SIZE( (N + jusha::cuda::JCKonst::cuda_blocksize -1 )/jusha::cuda::JCKonst::cuda_blocksize)
+
+ 
+
+
