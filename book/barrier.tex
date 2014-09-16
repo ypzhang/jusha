@@ -1,0 +1,13 @@
+% !TEX root = xelatex_main.tex
+\chapter{实现内核里的全局同步}
+
+CUDA没有内核里的全局同步，这和CUDA的思想是格格不如的。
+\begin{itemize}
+\item 全局同步开销很贵
+\item 不同硬件有不同的运算核，代码应该
+\item 自己的
+\item At the block level, allows blocks to be executed in any order on GPUCan use different sizes of blocks depending upon the resources of GPU – so-called “transparent scalability”
+\end{itemize}
+
+但是这不见得是不能实现的。\cite{conf/ipps/XiaoF10}
+
