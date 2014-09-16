@@ -1,4 +1,7 @@
+% !TEX program = xelatex
 % !TEX root = xelatex_main.tex
+% !TEX encoding = UTF-8 Unicode
+
 \chapter{理解内存合并访问}
 
 有很多内核里浮点或整形运算量不能完全掩盖内存访问延迟，也就是说它们的性能是被内存的带宽限制的（memory bounded)。 对于这些内核来说，理解并尽可能地满足CUDA里的内存合并访问（Coalesced Memory Access）是提升内核性能的最主要手段之一。 让我们从一个简单的例子来看看到底怎么样才能最大限度地利用GPU上的巨大带宽。这个例子的任务是用内核函数来实现两块GPU内存之间的拷贝。从功能上来说这是CUDA提供的cudaMemcpy的一种（cudaMemcpyDeviceToDevice)，貌似没有什么必要，但是我们可以和这个API做一下性能上的比较，看看我们的实现是否和CUDA提供的cudaMemcpy相仿。同时也能理解一下保证合并访问的条件。
