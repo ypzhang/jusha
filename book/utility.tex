@@ -1,5 +1,7 @@
+% !TEX program = xelatex
 % !TEX root = xelatex_main.tex
 % !TEX encoding = UTF-8 Unicode
+
 \chapter{基本工具}
 
 这章主要介绍一些个人随身携带的工具。 编程语言是C++/CUDA，并且尽可能的使用C++11标准的一些新特性。CUDA推荐6.0以上，而且越新越好。代码基本在LINUX／MAC OS X下编译，不追求跨平台（换句话说WINDOWS拜拜了）。所有自写的代码都在jusha的namespace下，以避免和其它库冲突。
@@ -16,7 +18,7 @@
 基于这套API我们就可以简单的构造一个类把这些API包裹起来，然后定义几个函数来方便调用，这样每次加入测量就不用查手册了。
 
 \section{项目配置}
-对于项目配置，个人推荐CMake，因为这实在是跨平台的利器。不管是生成Makefile系统，还是Visual Studio的项目文件，还是Xcode，只需要写一个通用脚本就能通吃。以下提供一个最简单的生成带有CUDA文件的C++项目的CMake脚本。
+对于项目配置，个人推荐CMake，因为这实在是跨平台的利器。不管是生成Makefile系统，还是Visual Studio的项目文件，还是Xcode，只需要写一个通用脚本就能通吃。以下提供一个最简单的生成带有CUDA文件的C++项目的CMake脚本。短短20行，省去了多少在Visual Studio下的鼠标操作啊。
 \myvspace
 \lstinputlisting{code/CMakelists.txt}
 

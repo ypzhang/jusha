@@ -12,20 +12,13 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM30} ${GENCODE_SM35})
 # Add the base directory to your include file search path
 include_directories(${CMAKE_SRC_DIR})
 
-set(CPP_SRC
-# a list of your cpp files, e.g. file1.cpp file2.cpp
-)
-set(CU_SRC
-# a list of your cu files,  e.g. kernel1.cu kernel2.cu
-)
-# Headers are here just so CMake will put them in project files.
-set(HEADERS
-# a list of header files, e.g. header1.h header2.h
+set(SRC_LIST
+# a list of your cpp/cu/header files, e.g. file1.cpp kernel1.cu header.h
 )
 
-#if it is a shared library:
-cuda_add_library(your_project_name SHARED ${CU_SRC} ${CPP_SRC} ${HEADERS})
+#if it is a shared library: (if static, change SHARED to STATIC)
+cuda_add_library(your_project_name SHARED ${SRC_LIST})
 # or if it is an executable
-# cuda_add_executable(your_project_name ${CU_SRC} ${CPP_SRC} ${HEADERS})
+# cuda_add_executable(your_project_name ${SRC_LIST})
 
 
