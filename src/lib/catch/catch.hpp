@@ -27,9 +27,18 @@
 #pragma clang diagnostic ignored "-Wc++98-compat"
 #pragma clang diagnostic ignored "-Wc++98-compat-pedantic"
 #elif defined __GNUC__
+
+#define GCC_VERSION (__GNUC__ * 10000 \
+                     + __GNUC_MINOR__ * 100 \
+                     + __GNUC_PATCHLEVEL__)
+
+
+
 #pragma GCC diagnostic ignored "-Wvariadic-macros"
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#if GCC_VERSION >= 40600
 #pragma GCC diagnostic push
+#endif
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
 
@@ -8990,7 +8999,9 @@ using Catch::Detail::Approx;
 #ifdef __clang__
 #pragma clang diagnostic pop
 #elif defined __GNUC__
+#if GCC_VERSION >= 40600
 #pragma GCC diagnostic pop
+#endif
 #endif
 
 #endif // TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED

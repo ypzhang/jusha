@@ -53,7 +53,8 @@ endif()
 # Make the gampack headers visible without extra paths.
 include_directories(src)
 include_directories("${CMAKE_BINARY_DIR}/src")
-include_directories("${CMAKE_BINARY_DIR}/src/lib/cub-1.3.2")
+include_directories("${CMAKE_SOURCE_DIR}/src/lib/cub-1.3.2")
+include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
 
 # this flag is for gcc only
 
@@ -70,6 +71,7 @@ set(CPP_SRC_LIST
     src/utility.cpp
     src/timer.cpp
     src/cuda/cuda_config.cpp
+    src/cuda/heap_manager.cpp
 )
 
 set(CU_SRC_LIST
@@ -85,6 +87,8 @@ set(HEADERS_LIST
     src/utility.h
     src/cuda/utility.h
     src/cuda/bitmap_scan.h
+    src/cuda/heap_manager.h
+    src/cuda/array.h
 )
 
 if(UNIX)
