@@ -4,11 +4,11 @@ namespace jusha {
   namespace cuda {
 
     template <int block_size, typename T> 
-    __inline__  __device__ void block_scan(const T &val, volatile T *sh_mem) 
+    __inline__  __device__ void block_scan(const T &val, T &carry_out, volatile T *sh_mem) 
     {
       assert(block_size <= 1024);
       assert(block_size >= JC_cuda_warpsize);
-      sh_mem[threadId.x] = val;
+      sh_mem[threadIdx.x] = val;
       __syncthreads();   
       if (threadIdx.x >= 1)
         sh_mem[threadIdx.x] += sh_mem[threadIdx.x - 1 ]; 

@@ -6,6 +6,12 @@ namespace jusha {
     class Primitive {
     public:
       virtual void run() = 0;
+      void get_gpu_property(cudaDeviceProp &gpu_property) { 
+        jusha::cuda::get_cuda_property(gpu_property);
+      }
+    protected:
+      //     
+      //    private:
     };
   }
 }

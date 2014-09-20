@@ -9,7 +9,7 @@ namespace jusha {
     {
       assert(block_size <= 1024);
       assert(block_size >= JC_cuda_warpsize);
-      sh_mem[threadId.x] = val;
+      sh_mem[threadIdx.x] = val;
       __syncthreads();
       if (block_size >= 1024) {
         if (threadIdx.x < 512)  sh_mem[threadIdx.x] += sh_mem[threadIdx.x + 512];

@@ -45,6 +45,7 @@ namespace jusha {
       _max = elapsed > _max? elapsed: _max;
       _total += elapsed;
       ++_count;
+      printf("count %d min count %d max count %d.\n", _count, _min_count, _max_count);
       is_synced = true;
     }
   }
@@ -106,6 +107,7 @@ namespace jusha {
 
 
   void cuda_event_print(bool terse) {
+    cuda_event_sync();
     if (!terse)
       printf("************* outputing event stats ******************\n");
     std::map<std::string, CudaEvent>::iterator iter;
