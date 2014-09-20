@@ -3,11 +3,15 @@
 #include <cuda.h>
 #include <iostream>
 #include <fstream>
+#include <string>
 //#include "CudppPlanFactory.h"
-#include "heap_manager.h"
+
+
 //#include "SegmentArrayKernel.h"
 #include <curand.h>
-#include "external_lib_wrapper.h"
+#include "../utility.h"
+#include "./external_lib_wrapper.h"
+#include "./heap_manager.h"
 //#define USE_SHARED_PTR 1
 
 #ifdef USE_SHARED_PTR
@@ -126,6 +130,7 @@ namespace jusha {
       {
         return mSize;
       }
+
       void resize(int size) 
       {
 #ifdef _DEBUG_
@@ -229,6 +234,7 @@ namespace jusha {
           }
       }
 
+
       const T *getReadOnlyPtr() const
       {
         if (!isCpuValid)
@@ -247,6 +253,7 @@ namespace jusha {
             enableCpuWrite();
           }
         isGpuValid = false;
+        //        return hostBase.get();
         return hostBase;
       }
 
@@ -257,6 +264,7 @@ namespace jusha {
             allocateGpuIfNecessary();
             enableGpuRead();
           }
+        //        return dvceBase.get();
         return dvceBase;
       }
 
@@ -268,6 +276,7 @@ namespace jusha {
             enableGpuWrite();
           }
         isCpuValid = false;
+        //        return dvceBase.get();
         return dvceBase;
       }
   
@@ -294,9 +303,11 @@ namespace jusha {
         assert(index < mSize);
         assert(isCpuValid || isGpuValid);
         if (isCpuValid)
+          //          return hostBase.get()[index];
           return hostBase[index];
         T ele; 
         allocateCpuIfNecessary();
+        //        cudaError_t error = cudaMemcpy(&ele, dvceBase.get()+index, sizeof(T),cudaMemcpyDeviceToHost); 
         cudaError_t error = cudaMemcpy(&ele, dvceBase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         //    std::cout << "memcpy d2h size:" << sizeof(T)  << std::endl;
         assert(error == cudaSuccess);
@@ -308,9 +319,11 @@ namespace jusha {
         assert(index < mSize);
         assert(isCpuValid || isGpuValid);
         if (isCpuValid)
+          //          hostBase.get()[index] = value;
           hostBase[index] = value;
         if (isGpuValid)
           {
+            //            cudaError_t error = cudaMemcpy(dvceBase.get()+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
             cudaError_t error = cudaMemcpy(dvceBase+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
             assert(error == cudaSuccess);
           }
@@ -377,8 +390,8 @@ namespace jusha {
       {
         const T *myBase = getReadOnlyPtr();
         const T *superBase = super.getReadOnlyPtr();
-        uint mySize = size();
-        uint superSize = super.size();
+        size_t mySize = size();
+        size_t superSize = super.size();
         if (mySize > superSize)
           return false;
     
@@ -536,8 +549,9 @@ namespace jusha {
         if (isCpuValid && !isGpuValid)
           {
 #ifdef _DEBUG_
-            std::cout << "sync mirror array from host 0x" << std::hex << hostBase << " to device 0x" << dvceBase << " size(" << mSize << "); \n";
+            std::cout << "sync mirror array from host 0x" << std::hex << hostBase.get() << " to device 0x" << dvceBase.get() << " size(" << mSize << "); \n";
 #endif
+            //            cudaError_t error = cudaMemcpy(dvceBase.get(), hostBase.get(), mSize* sizeof(T), cudaMemcpyHostToDevice);
             cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
             //        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
             assert(error == cudaSuccess);
@@ -548,19 +562,22 @@ namespace jusha {
       {
         if (isGpuValid && !isCpuValid)
           {
-            //            CHECK_KERNEL_ERROR("before memcpy");
+            //            check_cuda_error("before memcpy", __FILE__, __LINE__);
 #ifdef _DEBUG_
-            std::cout << "sync mirror array from device 0x" << std::hex << dvceBase << " to host 0x" << hostBase << " size(" << mSize << "); \n";
+            std::cout << "sync mirror array from device 0x" << std::hex << dvceBase.get() << " to host 0x" << hostBase.get() << " size(" << mSize << "); \n";
+            /* assert(gHeapManager.find(CPU_HEAP, hostBase.get()) >= (mSize * (int)sizeof(T))); */
+            /* assert(gHeapManager.find(GPU_HEAP, dvceBase.get()) >= (mSize * (int)sizeof(T))); */
             assert(gHeapManager.find(CPU_HEAP, hostBase) >= (mSize * (int)sizeof(T)));
             assert(gHeapManager.find(GPU_HEAP, dvceBase) >= (mSize * (int)sizeof(T)));
 #endif
+            //            cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
             cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
             //        std::cout << "memcpy d2h size:" << mSize*sizeof(T)  << std::endl;
             assert(error == cudaSuccess);
           }
       }
 
-      int mSize;
+      size_t mSize;
       int mCapacity;
 #if USE_SHARED_PTR
       mutable boost::shared_ptr<T> hostBase;

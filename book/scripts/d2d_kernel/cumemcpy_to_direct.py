@@ -30,12 +30,6 @@ def bandwidth(timings, sizes):
     for i in range(0, len(timings)):
         result.append(num(2*sizes[i])/(num(timings[i])*1000000000.0))
     return result
-#    print result
-
-#        print num(sizes[i])
-#        print timings[i]
-#       result.append(float(sizes[i])/float(timings[i]))
-#        return result
 
         
 #read data
@@ -47,6 +41,8 @@ for data in import_text('cuMemcpy_direct.dat', ' '):
 #print column(table, 0)[1:]
 size = column(table, 1)[1:]
 
+size_string = column(table, 0)[1:]
+print size_string
 # data
 char = column(table, 2)[1:]
 float = column(table, 3)[1:]
@@ -64,8 +60,10 @@ ax.set_title("cuMemcpy Versus d2d_direct_kernel");
 ax.set_xlabel(table[0][0])
 ax.set_ylabel('Bandwidth')
 
+print len(size_string)
+print len(char_bw)
 fig.add_subplot(ax) 
-ax.plot(size, char_bw, linestyle = ':', color = 'k', linewidth = 3) 
+ax.plot(size_string, char_bw, linestyle = ':', color = 'k', linewidth = 3) 
 ax.plot(size, float_bw, linestyle = ':', color = 'k', linewidth = 3) 
 plt.show()
 fig.savefig('cudaMemcpy_d2d.eps') 
