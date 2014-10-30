@@ -75,6 +75,7 @@ namespace jusha {
     public:
       ScanPrimitive():m_counter(1) {
         thrust::fill(m_counter.begin(), m_counter.end(), 0);
+ 
       }
       virtual void run();
       void scan(const T *in_begin, const T *in_end, T *output);
