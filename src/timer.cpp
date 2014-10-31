@@ -45,7 +45,6 @@ namespace jusha {
       _max = elapsed > _max? elapsed: _max;
       _total += elapsed;
       ++_count;
-      printf("count %d min count %d max count %d.\n", _count, _min_count, _max_count);
       is_synced = true;
     }
   }

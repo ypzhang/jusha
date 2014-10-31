@@ -18,7 +18,7 @@ __inline__ __device__ float4 my_fetch_x(const int& i, const float4 * RESTRICT x)
   if (UseCache)
     return tex1Dfetch(tex_x_float4, i);
   else
-    return x[i    ];
+    return x[i];
 #else
   return x[i];
 #endif

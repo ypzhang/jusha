@@ -6,7 +6,7 @@
 #include <string>
 //#include "CudppPlanFactory.h"
 
-
+#include <thrust/device_ptr.h>
 //#include "SegmentArrayKernel.h"
 #include <curand.h>
 #include "../utility.h"
@@ -18,6 +18,7 @@
 #include "boost/shared_ptr.hpp"
 #endif
 //extern cudaDeviceProp gDevProp;
+
 
 namespace jusha {
   extern HeapManager gHeapManager;
@@ -40,6 +41,11 @@ namespace jusha {
           }
       
       ~MirroredArray() {
+        if (dvceBase)
+          gHeapManager.NeFree(GPU_HEAP, dvceBase);
+        if (hostBase)
+          gHeapManager.NeFree(CPU_HEAP, hostBase);
+
       }
       
       // Copy Constructor
@@ -208,75 +214,34 @@ namespace jusha {
           }
       }
 
-      void setToZero(int size = -1)
+      void zero()
       {
-        if (isCpuValid)
-          {
-            allocateCpuIfNecessary();
-            if (size == -1)
-              memset(hostBase, 0, sizeof(T)*mSize);
-            else 
-              memset(hostBase, 0, sizeof(T)*size);
-            if (isGpuValid)
-              {
-                allocateGpuIfNecessary();
-                cudaMemset(dvceBase, 0, sizeof(T)*mSize);
-              }
-          }
-        else
-          {
-            allocateGpuIfNecessary();
-            if (size == -1)
-              cudaMemset(dvceBase, 0, sizeof(T)*mSize);
-            else
-              cudaMemset(dvceBase, 0, sizeof(T)*size);
-            isGpuValid = true;
-          }
+        enableGpuWrite();
+        cudaMemset((void *)dvceBase, 0, sizeof(T)*mSize);
       }
 
 
       const T *getReadOnlyPtr() const
       {
-        if (!isCpuValid)
-          {
-            allocateCpuIfNecessary();
-            enableCpuRead();
-          }
+        enableCpuRead();
         return hostBase;
       }
 
       T *getPtr()
       {
-        if (!isCpuValid)
-          {
-            allocateCpuIfNecessary();
-            enableCpuWrite();
-          }
-        isGpuValid = false;
-        //        return hostBase.get();
+        enableCpuWrite();
         return hostBase;
       }
 
       const T *getReadOnlyGpuPtr() const
       {
-        if (!isGpuValid)
-          {
-            allocateGpuIfNecessary();
-            enableGpuRead();
-          }
-        //        return dvceBase.get();
+        enableGpuRead();
         return dvceBase;
       }
 
       T *getGpuPtr()
       {
-        if (!isGpuValid)
-          {
-            allocateGpuIfNecessary();
-            enableGpuWrite();
-          }
-        isCpuValid = false;
-        //        return dvceBase.get();
+        enableGpuWrite();
         return dvceBase;
       }
   
@@ -290,7 +255,7 @@ namespace jusha {
       const T &operator[](int index) const
       {
         assert(index < mSize);
-        T const *host = getReadOnlyPtr();
+        const T *host = getReadOnlyPtr();
         return host[index];
       }
 
@@ -335,6 +300,7 @@ namespace jusha {
         rng.apply(getGpuPtr(), mSize);
       }
 
+      // use sequence in thrust
       void sequence(int dir)
       {
         T *ptr = getPtr();
@@ -351,10 +317,10 @@ namespace jusha {
       }
 
       // for DEBUG purpose
-      void print(const char *header=0) const
+      void print(const char *header=0, int print_size = MAX_PRINT_SIZE) const
       {
         const T *ptr = getReadOnlyPtr();
-        int size = mSize > MAX_PRINT_SIZE? MAX_PRINT_SIZE: mSize;
+        int size = mSize > print_size? print_size: mSize;
         if (header)
           std::cout << header << std::endl;
         for (int i = 0; i != size; i++)
@@ -467,6 +433,40 @@ namespace jusha {
           }
         return sorted;
       }
+
+
+    inline typename thrust::device_ptr<T> begin()
+    //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer)); }
+    { 
+      enableGpuWrite();
+      return thrust::device_ptr<T>(getGpuPtr()); 
+    }
+
+    /*! \brief Return the last iterator (the first invalid iterator) in the srt::vector */
+    inline typename thrust::device_ptr<T> end()
+    //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer+m_size)); }
+    { 
+      enableGpuWrite();
+      return thrust::device_ptr<T>(getGpuPtr()+mSize);
+    }
+
+    /*! \brief Return the iterator to the first element in the srt::vector */
+    inline typename thrust::device_ptr<T> begin() const
+    //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer)); }
+    { 
+      enableGpuRead();
+      return thrust::device_ptr<T>(const_cast<T*>(getReadOnlyGpuPtr()));
+    }
+
+    /*! \brief Return the last iterator (the first invalid iterator) in the srt::vector */
+    inline typename thrust::device_ptr<T> end() const
+    //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer+m_size)); }
+    {
+      enableGpuRead();
+      return thrust::device_ptr<T>(const_cast<T*>(getReadOnlyGpuPtr()+mSize));
+    }
+
+
     private:
       inline void allocateCpuIfNecessary()  const
       {

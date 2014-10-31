@@ -43,8 +43,8 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O0 -DDEBUG")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O0 -DDEBUG -g")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
 else()
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
 endif()
@@ -108,6 +108,7 @@ else()
   cuda_add_library(jusha STATIC ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
 endif()
 
+target_link_libraries(jusha ${CUDA_curand_LIBRARY})
 
 #configure_file("${CMAKE_SOURCE_DIR}/src/jusha_config.h.in.cmake" "${CMAKE_BINARY_DIR}/src/jusha_config.h")
 

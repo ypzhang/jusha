@@ -17,10 +17,9 @@ namespace jusha {
 #define __JUSHA_FUNC__ __PRETTY_FUNCTION__
 #endif
 
+  void check_cuda_error(const char *kernelname, const char *file, int line_no, cudaStream_t stream = 0);
 
-
-void check_cuda_error(const char *kernelname, const char *file, int line_no, cudaStream_t stream = 0);
-
+  double jusha_get_wtime();
 
 }
 

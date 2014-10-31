@@ -11,5 +11,6 @@ template <typename T>
 void d2d_direct(T *dst, const T *src, size_t size){
   int BS = jusha::cuda::JCKonst::cuda_blocksize;
   int Blocks = std::min(jusha::cuda::JCKonst::cuda_max_blocks, (int)(size+BS-1/BS));
+  //  printf("copying from %p to %p\n", src, dst);
   d2d_direct_kernel<<<Blocks, BS>>>(dst, src, size);
 }

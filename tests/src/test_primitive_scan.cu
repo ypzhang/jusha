@@ -1,5 +1,5 @@
 #include <thrust/scan.h>
-#include "cuda/scan_primivite.h"
+#include "cuda/scan_primitive.h"
 #include "timer.h"
 
 using namespace jusha;
