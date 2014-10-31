@@ -14,9 +14,16 @@
 \myvspace
 \lstinputlisting[language=C++]{\JushaBase/tests/src/cudamemcpy.cu}
 
-首先我们来比较一下性能，这里画出不同数据大小在各种数据类型的测量带宽曲线，类型有char, int/float, double, float3, float4。
+首先我们来比较一下性能，图\ref{fig:d2d_direct} 画出d2d\_direct\_kernel在不同数据大小和不同数据类型的带宽曲线，类型有char, int/float, double, float3, float4。对于cudaMemcpy， 由于它不区分数据类型，我们只画出一条曲线。另外，测试是在NVIDIA K40上，没有ECC。
+\begin{figure}[h!] %  figure placement: here, top, bottom, or page
+   \centering
+   \includegraphics[width=\linewidth]{scripts/d2d_kernel/cudaMemcpy_vs_d2d.eps} 
+   \caption{example caption}
+   \label{fig:d2d_direct}
+\end{figure}
+%
 
-可以看到cudaMemcpy性能非常稳定，不管是任何类型，在  处都能达到理论带宽的％。而我们写的函数则优劣不齐。好的（float4, int, double）能接近cudaMemcpy，差的只能达到二分之一(char) 或者（flaot3）左右。
+可以看到cudaMemcpy性能非常稳定，在  处都能达到理论带宽的％。而我们写的函数则优劣不齐。好的（float4, int, double）能接近cudaMemcpy，差的只能达到二分之一(char) 或者（flaot3）左右。
 
 现在回到CUDA文档里合并访问的要求，如下：
 \begin{itemize}

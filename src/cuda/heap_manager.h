@@ -18,8 +18,8 @@ void EmptyDeviceDeleter(void *ptr);
 
 class HeapManager{
  public:
- HeapManager():maxCpuUsage(0),
-    maxGpuUsage(0)
+ HeapManager()/* :maxCpuUsage(0), */
+    /* maxGpuUsage(0) */
       {}
   ~HeapManager();
   void NeMalloc(Memory_Type type, void ** addr, int size);
@@ -28,10 +28,10 @@ class HeapManager{
  private:
   std::map <void *, int> mGpuMemoryTracker;
   std::map <void *, int> mCpuMemoryTracker;
-  int maxCpuUsage;
-  int maxGpuUsage;
-  int curCpuUsage;
-  int curGpuUsage;
+  /* int maxCpuUsage; */
+  /* int maxGpuUsage; */
+  /* int curCpuUsage; */
+  /* int curGpuUsage; */
 };
 
 }
