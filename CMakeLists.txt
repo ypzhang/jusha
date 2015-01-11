@@ -72,6 +72,8 @@ set(CPP_SRC_LIST
     src/timer.cpp
     src/cuda/cuda_config.cpp
     src/cuda/heap_manager.cpp
+
+	src/sparse/parser/su2_mesh_parser.cpp
 )
 
 set(CU_SRC_LIST
@@ -85,10 +87,12 @@ set(CU_SRC_LIST
 set(HEADERS_LIST
     src/timer.h
     src/utility.h
-    src/cuda/utility.h
+
     src/cuda/bitmap_scan.h
     src/cuda/heap_manager.h
     src/cuda/array.h
+
+	src/sparse/parser/su2_mesh_parser.h
 )
 
 if(UNIX)

@@ -12,7 +12,7 @@ TEST_CASE( "Utility", "[perf_timer]" ) {
   double start = jusha_get_wtime();
   double end = jusha_get_wtime();
     fprintf(stderr, "start %1.5f end %1.5f.\n", start, end);
-  REQUIRE (start < end);
+  REQUIRE (start <= end);
   REQUIRE (start > 0.0);
   REQUIRE (  end > 0.0);
 

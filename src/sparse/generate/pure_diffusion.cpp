@@ -5,6 +5,7 @@ namespace yac {
 void create_pure_diffusion_1d(double L, int N,  double gamma, double S, double T_left, double T_right
                               , matrix<double> &M, std::vector<double> &rhs)
 {
+  // at least include an non-boundary node
   assert(N >= 3);
   assert(L > 0.0);
   double delta_x = L/N;

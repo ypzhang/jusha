@@ -8,7 +8,6 @@
 
 #include "timer.h"
 #include "utility.h"
-#include "cuda/utility.h"
 #include "cuda/cuda_config.h"
 
 //#include "cuda/d2d_copy.h"

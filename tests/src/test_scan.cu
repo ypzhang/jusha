@@ -5,7 +5,6 @@
 #include <thrust/sequence.h>
 
 #include "timer.h"
-#include "cuda/utility.h"
 #include "cuda/cuda_config.h"
 #include "cuda/bitmap_scan.h"
 
