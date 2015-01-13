@@ -32,16 +32,18 @@ namespace yac {
     bool has_dims(const std::string &line);
     void  get_dim(const std::string &line);
     void  get_elems(const std::string &line);
-    void  get_points(const std::string &line);    
+    void  get_points(const std::string &line);
+    void  get_nmark(const std::string &line);
     
     void parse_elems(const std::string &line);
     void parse_points(const std::string &line);
-
+    void parse_nmark(const std::string &line);
 
     // members:
     int m_dims = 0;
     int m_elems = 0;
     int m_points = 0;
+    int m_marks = 0;
     
     std::ifstream m_mesh_file;    
   };

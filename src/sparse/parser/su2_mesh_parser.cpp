@@ -114,7 +114,7 @@ namespace yac {
     while(!m_mesh_file.eof()) {
       if (elem_idx == m_elems) return;
       getline(m_mesh_file, _line);
-      if (is_comment(line)) continue;
+      if (is_comment(_line)) continue;
       istringstream elem_line(_line);      
       int type;
       elem_line >> type;
@@ -140,25 +140,28 @@ namespace yac {
     get_points(line);
     if (m_points == 0)  return;
     assert(!m_mesh_file.eof());
-    //    int point_idx = 0;
+    int point_idx = 0;
     //    Su2ELemType VTK_Type;
     //    geometry.resize(m_points);
-#if 1
     std::string _line;
     while(!m_mesh_file.eof()) {
-      if (elem_idx == m_elems) return;
+      if (point_idx == m_points) return;
       getline(m_mesh_file, _line);
-      if (is_comment(line)) continue;
-      istringstream elem_line(_line);
-      
+      if (is_comment(_line)) continue;
+      istringstream point_line(_line);
+      double pos[3];
       if (m_dims == 2) {
-        
+        point_line >> pos[0];         point_line >> pos[1]; 
       } else if (m_dims == 3) {
-        
+        point_line >> pos[0];         point_line >> pos[1];         point_line >> pos[2]; 
       }
+      //      printf("%f %f\n",pos[0], pos[1]);
+      int index;
+      point_line >> index;
+      assert(index == point_idx);
+      point_idx++;
     }
-    assert(elem_idx == m_elems);
-#endif
+    assert(point_idx == m_points);
   }
   
 
