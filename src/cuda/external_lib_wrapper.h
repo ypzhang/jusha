@@ -13,6 +13,7 @@ namespace jusha {
           if (cuRandgen == 0)
             {
               curandStatus_t status = curandCreateGenerator(&cuRandgen,  rng_type);
+              assert(status == CURAND_STATUS_SUCCESS);
             }
           return cuRandgen;
         }

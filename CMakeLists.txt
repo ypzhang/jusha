@@ -80,6 +80,7 @@ set(CU_SRC_LIST
     src/cuda/utility.cu
     src/cuda/bitmap_scan.cu
 
+	src/sparse/mesh.cu
 #    src/cuda/dummy.cu
 )
 
@@ -93,6 +94,7 @@ set(HEADERS_LIST
     src/cuda/array.h
 
 	src/sparse/parser/su2_mesh_parser.h
+	src/sparse/mesh.h
 )
 
 if(UNIX)

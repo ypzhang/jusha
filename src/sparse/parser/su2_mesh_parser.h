@@ -14,15 +14,15 @@ namespace yac {
       PYRAMID = 14
    };
 
-  
+  class Mesh;
 
   
   class Su2MeshParser {
   public:
-    bool parse_file(const char *filename);
+    bool parse_file(const char *filename, Mesh &mesh);
 
   private:
-    void process_line(const std::string &line);
+    void process_line(const std::string &line, Mesh &mesh);
     bool is_comment(const std::string &line);
     bool is_config_dims(const std::string &line);
     bool is_config_elems(const std::string &line);
@@ -30,13 +30,13 @@ namespace yac {
     
     // setup imension
     bool has_dims(const std::string &line);
-    void  get_dim(const std::string &line);
+    void  get_dim(const std::string &line, Mesh &mesh);
     void  get_elems(const std::string &line);
-    void  get_points(const std::string &line);
+    void  get_points(const std::string &line, Mesh &mesh);
     void  get_nmark(const std::string &line);
     
     void parse_elems(const std::string &line);
-    void parse_points(const std::string &line);
+    void parse_points(const std::string &line, Mesh &mesh);
     void parse_nmark(const std::string &line);
 
     // members:

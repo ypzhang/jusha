@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cassert>
 #include "./su2_mesh_parser.h"
+#include "../mesh.h"
 
 using namespace std;
 namespace yac {
@@ -9,7 +10,7 @@ namespace yac {
   static char elems_prefix[]="NELEM=";
   static char points_prefix[]="NPOIN=";
 
-  bool Su2MeshParser::parse_file(const char *filename)
+  bool Su2MeshParser::parse_file(const char *filename, Mesh &mesh)
   {
     m_mesh_file.open(filename);
     if (!m_mesh_file.is_open()) {
@@ -20,21 +21,21 @@ namespace yac {
     string line; 
     while (! m_mesh_file.eof() ) {
       getline(m_mesh_file, line);
-      printf("getting new line %s.\n", line.c_str());
-      process_line(line);
+      //      printf("getting new line %s.\n", line.c_str());
+      process_line(line, mesh);
     }
 
     m_mesh_file.close();
     return true;
   }
 
-  void Su2MeshParser::process_line(const string &line)
+  void Su2MeshParser::process_line(const string &line, Mesh &mesh)
   {
     if (is_comment(line)) return;
     
-    if (is_config_dims(line))  get_dim(line);
+    if (is_config_dims(line))  get_dim(line, mesh);
     else if (is_config_elems(line)) parse_elems(line);
-    else if (is_config_points(line)) parse_points(line);
+    else if (is_config_points(line)) parse_points(line, mesh);
   }
 
   bool Su2MeshParser::is_comment(const string &line)
@@ -48,7 +49,7 @@ namespace yac {
   {
     // printf("sizeof(dims_prefix) is %ld.\n", sizeof(dims_prefix));
     // printf("checking config dims %s %s true ? %d.\n", line.c_str(), dims_prefix, strncmp(line.c_str(), dims_prefix, sizeof(dims_prefix)));
-    printf("checking config dims %s true ? %d.\n", line.c_str(), line.compare(0, sizeof(dims_prefix)-1, dims_prefix) == 0);
+    //    printf("checking config dims %s true ? %d.\n", line.c_str(), line.compare(0, sizeof(dims_prefix)-1, dims_prefix) == 0);
     if (line.size() > sizeof(dims_prefix))
       return (line.compare(0, sizeof(dims_prefix)-1, dims_prefix) == 0);
     return false;
@@ -56,7 +57,7 @@ namespace yac {
 
   bool Su2MeshParser::is_config_elems(const string &line)
   {
-    printf("checking config elemens %s true ? %d.\n", line.c_str(), line.compare(0, sizeof(elems_prefix)-1, elems_prefix) == 0);
+    //    printf("checking config elemens %s true ? %d.\n", line.c_str(), line.compare(0, sizeof(elems_prefix)-1, elems_prefix) == 0);
     if (line.size() > 0)
       return (line.compare(0, sizeof(elems_prefix)-1, elems_prefix) == 0);
     return false;
@@ -64,18 +65,19 @@ namespace yac {
 
   bool Su2MeshParser::is_config_points(const std::string &line)
   {
-    printf("checking config points %s true ? %d.\n", line.c_str(), line.compare(0, sizeof(points_prefix)-1, points_prefix) == 0);
+    //    printf("checking config points %s true ? %d.\n", line.c_str(), line.compare(0, sizeof(points_prefix)-1, points_prefix) == 0);
     if (line.size() > 0)
       return (line.compare(0, sizeof(points_prefix)-1, points_prefix) == 0);
     return false;
   }
 
-  void Su2MeshParser::get_dim(const std::string &line)
+  void Su2MeshParser::get_dim(const std::string &line, Mesh &mesh)
   {
     if (line.size() < sizeof(elems_prefix)) return;
     std::string number = line.substr (sizeof("NDIME="));
     std::istringstream ss(number);
     ss >> m_dims;
+    mesh.set_dims(m_dims);
     std::cout << "parsed dimension " << m_dims << std::endl;
   }
 
@@ -88,12 +90,13 @@ namespace yac {
     std::cout << "parsed num of elements  " << m_elems << std::endl;
   }
 
-  void Su2MeshParser::get_points(const std::string &line)
+  void Su2MeshParser::get_points(const std::string &line, Mesh &mesh)
   {
     if (line.size() < sizeof(points_prefix)) return;
     std::string number = line.substr (sizeof(points_prefix));
     std::istringstream ss(number);
     ss >> m_points;
+    mesh.set_num_nodes(m_points);
     std::cout << "parsed num of points  " << m_points << std::endl;
   }
 
@@ -135,9 +138,9 @@ namespace yac {
     assert(elem_idx == m_elems);
   }
   
-  void Su2MeshParser::parse_points(const std::string &line)
+  void Su2MeshParser::parse_points(const std::string &line, Mesh &mesh)
   {
-    get_points(line);
+    get_points(line, mesh);
     if (m_points == 0)  return;
     assert(!m_mesh_file.eof());
     int point_idx = 0;
@@ -150,10 +153,15 @@ namespace yac {
       if (is_comment(_line)) continue;
       istringstream point_line(_line);
       double pos[3];
+
       if (m_dims == 2) {
-        point_line >> pos[0];         point_line >> pos[1]; 
+        point_line >> pos[0];         point_line >> pos[1];
+        float2 f_pos = make_float2(pos[0], pos[1]);
+        mesh.set_node_pos(point_idx, f_pos);
       } else if (m_dims == 3) {
-        point_line >> pos[0];         point_line >> pos[1];         point_line >> pos[2]; 
+        point_line >> pos[0];         point_line >> pos[1];         point_line >> pos[2];
+        float4 f_pos = make_float4(pos[0], pos[1], pos[2], 1.0f);
+        mesh.set_node_pos(point_idx, f_pos);
       }
       //      printf("%f %f\n",pos[0], pos[1]);
       int index;
