@@ -27,6 +27,21 @@ namespace yac {
     
     void set_node_pos(int index, float2 &pos);
     void set_node_pos(int index, float4 &pos);
+
+    float2 get_node_2d_pos(int idx) const {
+      assert(m_dims == 2);
+      assert(m_2d_node_pos.size() > idx);
+      const float2 *_pos = m_2d_node_pos.getReadOnlyPtr();
+      return _pos[idx];
+    }
+
+    float4 get_node_3d_pos(int idx) const {
+      assert(m_dims == 3);
+      assert(m_3d_node_pos.size() > idx);
+      const float4 *_pos = m_3d_node_pos.getReadOnlyPtr();
+      return _pos[idx];
+    }
+
   private:
     int m_dims;
     int m_num_nodes;

@@ -13,6 +13,27 @@ message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
 # CUDA is always required.
 find_package(CUDA REQUIRED)
+
+
+# openGL stuff
+# GLUT
+find_package(GLUT REQUIRED)
+include_directories(${GLUT_INCLUDE_DIRS})
+link_directories(${GLUT_LIBRARY_DIRS})
+add_definitions(${GLUT_DEFINITIONS})
+if(NOT GLUT_FOUND)
+    message(ERROR " GLUT not found!")
+endif(NOT GLUT_FOUND)
+#########################################################
+# FIND OPENGL
+#########################################################
+find_package(OpenGL REQUIRED)
+include_directories(${OpenGL_INCLUDE_DIRS})
+link_directories(${OpenGL_LIBRARY_DIRS})
+add_definitions(${OpenGL_DEFINITIONS})
+if(NOT OPENGL_FOUND)
+    message(ERROR " OPENGL not found!")
+endif(NOT OPENGL_FOUND)
 #set(CUDA_PROPAGATE_HOST_FLAGS off)
 
 
@@ -57,11 +78,13 @@ include_directories("${CMAKE_SOURCE_DIR}/src/lib/cub-1.3.2")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
 
 # this flag is for gcc only
+set (CMAKE_MACOSX_RPATH On)
 
 if (APPLE)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 #set (CUDA_HOST_COMPILER g++)
 #set (CMAKE_CXX_COMPILER g++)
+
 elseif (UNIX)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
@@ -73,6 +96,7 @@ set(CPP_SRC_LIST
     src/cuda/cuda_config.cpp
     src/cuda/heap_manager.cpp
 
+	src/sparse/view/opengl_helper.cpp
 	src/sparse/parser/su2_mesh_parser.cpp
 )
 
@@ -82,6 +106,8 @@ set(CU_SRC_LIST
 
 	src/sparse/mesh.cu
 #    src/cuda/dummy.cu
+
+	src/sparse/view/2d_viewer.cu
 )
 
 # Headers are here just so CMake will put them in project files.
@@ -95,6 +121,9 @@ set(HEADERS_LIST
 
 	src/sparse/parser/su2_mesh_parser.h
 	src/sparse/mesh.h
+
+	src/sparse/view/2d_viewer.h
+	src/sparse/view/opengl_helper.h
 )
 
 if(UNIX)
