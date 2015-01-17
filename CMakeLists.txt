@@ -16,14 +16,25 @@ find_package(CUDA REQUIRED)
 
 
 # openGL stuff
+# glfw
+if (APPLE)
+include_directories(/opt/local/include/)
+endif (APPLE)
 # GLUT
-find_package(GLUT REQUIRED)
-include_directories(${GLUT_INCLUDE_DIRS})
-link_directories(${GLUT_LIBRARY_DIRS})
-add_definitions(${GLUT_DEFINITIONS})
-if(NOT GLUT_FOUND)
-    message(ERROR " GLUT not found!")
-endif(NOT GLUT_FOUND)
+#find_package(GLUT REQUIRED)
+#include_directories(${GLUT_INCLUDE_DIRS})
+#link_directories(${GLUT_LIBRARY_DIRS})
+#add_definitions(${GLUT_DEFINITIONS})
+#if(NOT GLUT_FOUND)
+#    message(ERROR " GLUT not found!")
+#endif(NOT GLUT_FOUND)
+
+find_library (GLFW_LIB_LIBRARIES  NAMES glfw
+  PATHS /opt/local/lib
+  REQUIRED
+)
+message(STATUS "Found glfw library @ ${GLFW_LIB_LIBRARIES}")
+
 #########################################################
 # FIND OPENGL
 #########################################################
@@ -34,6 +45,7 @@ add_definitions(${OpenGL_DEFINITIONS})
 if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
 endif(NOT OPENGL_FOUND)
+message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
 #set(CUDA_PROPAGATE_HOST_FLAGS off)
 
 
@@ -144,7 +156,9 @@ else()
 endif()
 
 target_link_libraries(jusha ${CUDA_curand_LIBRARY})
-
+#include_directories(/opt/local/lib)
+target_link_libraries(jusha ${GLFW_LIB_LIBRARIES})
+target_link_libraries(jusha ${OPENGL_LIBRARIES})
 #configure_file("${CMAKE_SOURCE_DIR}/src/jusha_config.h.in.cmake" "${CMAKE_BINARY_DIR}/src/jusha_config.h")
 
 add_subdirectory (tests)

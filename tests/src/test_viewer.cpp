@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "sparse/parser/su2_mesh_parser.h"
 #include "sparse/mesh.h"
-#include "2d_viewer.h"
+#include "sparse/view/2d_viewer.h"
 
 using namespace yac;
 
