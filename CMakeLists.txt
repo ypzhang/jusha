@@ -48,7 +48,12 @@ endif(NOT OPENGL_FOUND)
 message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
 #set(CUDA_PROPAGATE_HOST_FLAGS off)
 
+find_package(HDF5 REQUIRED)
 
+find_library (HDF5HL_LIBRARY  NAMES hdf5_hl
+              PATHS ${HDF5_LIBRARY_DIRS}
+              )
+      
 # Possible build types.
 #if(NOT CMAKE_BUILD_TYPE)
 #    set(CMAKE_BUILD_TYPE Debug CACHE STRING
@@ -88,6 +93,9 @@ include_directories(src)
 include_directories("${CMAKE_BINARY_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/cub-1.3.2")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
+include_directories("${HDF5_INCLUDE_DIRS}")
+
+      
 
 # this flag is for gcc only
 set (CMAKE_MACOSX_RPATH On)
@@ -108,8 +116,13 @@ set(CPP_SRC_LIST
     src/cuda/cuda_config.cpp
     src/cuda/heap_manager.cpp
 
-	src/sparse/view/opengl_helper.cpp
+    src/sparse/matrix_reader.cpp
+    src/sparse/mmio.cpp
+    
+    src/sparse/view/opengl_helper.cpp
 	src/sparse/parser/su2_mesh_parser.cpp
+
+    
 )
 
 set(CU_SRC_LIST
@@ -131,8 +144,11 @@ set(HEADERS_LIST
     src/cuda/heap_manager.h
     src/cuda/array.h
 
-	src/sparse/parser/su2_mesh_parser.h
+    src/sparse/matrix_reader.h
+    src/sparse/mmio.h
 	src/sparse/mesh.h
+    
+	src/sparse/parser/su2_mesh_parser.h
 
 	src/sparse/view/2d_viewer.h
 	src/sparse/view/opengl_helper.h
@@ -158,7 +174,9 @@ endif()
 target_link_libraries(jusha ${CUDA_curand_LIBRARY})
 #include_directories(/opt/local/lib)
 target_link_libraries(jusha ${GLFW_LIB_LIBRARIES})
-target_link_libraries(jusha ${OPENGL_LIBRARIES})
+#      message(STATUS, "hdf5 lib names ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES}")
+#      message(STATUS "hdf5 high level ${HDF5HL_LIBRARY}")
+target_link_libraries(jusha ${OPENGL_LIBRARIES}  ${HDF5_LIBRARIES} ${HDF5HL_LIBRARY})
 #configure_file("${CMAKE_SOURCE_DIR}/src/jusha_config.h.in.cmake" "${CMAKE_BINARY_DIR}/src/jusha_config.h")
 
 add_subdirectory (tests)
