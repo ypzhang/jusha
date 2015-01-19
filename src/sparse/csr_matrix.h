@@ -4,19 +4,28 @@
 #include "cuda/array.h"
 
 namespace jusha {
+  
+template <typename T>
+void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const int64_t *cols, const T* coefs, T *diag, T *offd);
+
+
 template <typename T>
 class CsrMatrix: public Matrix<T>{
 public:
- CsrMatrix(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, const int64_t *cols, T *coefs): Matrix<T>(nrows, ncols) {
+ CsrMatrix(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, const int64_t *cols, const T *coefs): Matrix<T>(nrows, ncols) {
     init(nrows, ncols, row_ptrs, cols, coefs);
   }
     
-  virtual void init(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, const int64_t *cols, T *coefs);
+  virtual void init(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, const int64_t *cols, const T *coefs);
+
+  virtual const JVector<T> &get_diag() const ;  
 private:
   size_t m_nnz;
-  cuda::MirroredArray<int32_t> m_row_ptrs;
-  cuda::MirroredArray<int64_t> m_cols;
-  cuda::MirroredArray<T> m_coefs;
+  JVector<int32_t> m_row_ptrs;
+  JVector<int64_t> m_cols;
+  JVector<T>       m_coefs;
+  JVector<T>       m_diag;
+  JVector<T>       m_offd;
   
 };
 

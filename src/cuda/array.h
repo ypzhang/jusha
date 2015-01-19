@@ -54,6 +54,13 @@ namespace jusha {
           copy(rhs);
         }
       
+      /* Init from raw pointers
+       */
+      void init(const T *ptr, size_t _size) {
+        resize(_size);
+        T *g_ptr = getGpuPtr();
+        cudaMemcpy(g_ptr, ptr, sizeof(T) * _size, cudaMemcpyDefault);
+      }
       // dangerous, used at your own risk!
       // does not check size consistency
       void setGpuPtr(T *ptr, bool needToFree=false)
@@ -606,7 +613,14 @@ namespace jusha {
       static curandGenerator_t curandGen;
   
     };
+
   } // cuda
+
+
+  // aliasing C++11 feature
+  /* template <typename T> */
+  /*   using JVector = cuda::MirroredArray<T>; */
+  #define JVector jusha::cuda::MirroredArray
 } // jusha
 
 /*

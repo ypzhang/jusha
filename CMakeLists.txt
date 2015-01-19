@@ -46,7 +46,7 @@ if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
 endif(NOT OPENGL_FOUND)
 message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
-#set(CUDA_PROPAGATE_HOST_FLAGS off)
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
 find_package(HDF5 REQUIRED)
 
@@ -66,7 +66,7 @@ set(BUILD_SHARED_LIBS OFF)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Werror")
-set(CUDA_PROPAGATE_HOST_FLAGS off)
+#set(CUDA_PROPAGATE_HOST_FLAGS ON)
 
 
 set(CUDA_BLOCKSIZE 256 CACHE STRING "CUDA block size.")
@@ -102,6 +102,7 @@ set (CMAKE_MACOSX_RPATH On)
 
 if (APPLE)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 #set (CUDA_HOST_COMPILER g++)
 #set (CMAKE_CXX_COMPILER g++)
 
@@ -116,8 +117,11 @@ set(CPP_SRC_LIST
     src/cuda/cuda_config.cpp
     src/cuda/heap_manager.cpp
 
+    src/sparse/solver/diag_precond.cpp
+    
     src/sparse/matrix_reader.cpp
     src/sparse/mmio.cpp
+    src/sparse/csr_matrix.cpp
     
     src/sparse/view/opengl_helper.cpp
 	src/sparse/parser/su2_mesh_parser.cpp
@@ -129,6 +133,7 @@ set(CU_SRC_LIST
     src/cuda/utility.cu
     src/cuda/bitmap_scan.cu
 
+    src/sparse/csr_matrix.cu    
 	src/sparse/mesh.cu
 #    src/cuda/dummy.cu
 
@@ -144,9 +149,13 @@ set(HEADERS_LIST
     src/cuda/heap_manager.h
     src/cuda/array.h
 
+    src/sparse/matrix.h
+    src/sparse/csr_matrix.h
     src/sparse/matrix_reader.h
     src/sparse/mmio.h
 	src/sparse/mesh.h
+
+	src/sparse/solver/precond.h
     
 	src/sparse/parser/su2_mesh_parser.h
 

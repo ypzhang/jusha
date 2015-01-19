@@ -1,12 +1,13 @@
 #include "catch.hpp"
-
+#include "./test_data.h"
 #include "sparse/matrix_reader.h"
 
-using namespace yac;
+using namespace jusha;
 
+namespace {
 TEST_CASE( "TestMatrixReader", "[2cubes_sphere]" ) {
   MatrixMarket mm;
-  mm.read_matrix("/Users/ypzhang/github/jusha_build/debug/tests/2cubes_sphere/2cubes_sphere.mtx");
+  mm.read_matrix(cubes2_sphere_filename.c_str());  
   REQUIRE(mm.num_rows() == 101492);
   REQUIRE(mm.num_nnzs() == 874378);
   //  printf("rows %d nnzs %d.\n", mm.num_rows(), mm.num_nnzs());
@@ -54,4 +55,6 @@ TEST_CASE( "TestCoo2Csr03", "[simple]" ) {
   REQUIRE(csr[5] == 4);
   REQUIRE(csr[6] == 5);
   REQUIRE(csr[7] == 7);    
+}
+
 }

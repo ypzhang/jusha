@@ -33,6 +33,10 @@ namespace jusha {
 #define CAP_BLOCK_SIZE(block) (block > jusha::cuda::JCKonst::cuda_max_blocks ? jusha::cuda::JCKonst::cuda_max_blocks:block)
 #define GET_BLOCKS(N) CAP_BLOCK_SIZE( (N + jusha::cuda::JCKonst::cuda_blocksize -1 )/jusha::cuda::JCKonst::cuda_blocksize)
 
+// used in kernels 
+#define kernel_get_1d_gid  blockIdx.x*blockDim.x + threadIdx.x
+#define kernel_get_1d_stride blockDim.x * gridDim.x
+
  
 
 
