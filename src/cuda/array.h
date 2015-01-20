@@ -51,7 +51,9 @@ namespace jusha {
       // Copy Constructor
       MirroredArray(const MirroredArray<T> &rhs) 
         {
-          copy(rhs);
+          init_state();
+          //          printf("in copy constructore %d %d %d %d.\n", isGpuValid, gpuAllocated, isCpuValid, cpuAllocated);          
+          deep_copy(rhs);
         }
       
       /* Init from raw pointers
@@ -102,12 +104,30 @@ namespace jusha {
       
       MirroredArray<T> &operator=(const MirroredArray<T> &rhs)
         {
-          copy(rhs);
+          deep_copy(rhs);
           return *this;
         }
       
+
+      // deep copy from
+      void deep_copy(const MirroredArray<T> &src) 
+      {
+        resize(src.size());
+        //        printf("deep copy src gpuvalid %d my gpuvalid %d gpu alloc %d.\n", src.isGpuValid, isGpuValid, gpuAllocated);
+        if (src.isGpuValid)
+          {
+            if (src.size())
+              cudaMemcpy(getGpuPtr(), src.getReadOnlyGpuPtr(), sizeof(T)*mSize, cudaMemcpyDeviceToDevice);
+            //            printf("deep copy src gpuvalid %d my gpuvalid %d %p size %zd.\n", src.isGpuValid, isGpuValid,dvceBase, src.size());
+          }
+        else if (isCpuValid)
+          {
+            if (src.size())
+              memcpy(getPtr(), src.getReadOnlyPtr(), sizeof(T)*mSize);
+          }
+      }
       
-      // deep copy
+      // deep copy to
       void clone(MirroredArray<T> &dst) const
       {
         dst.resize(size());
@@ -144,7 +164,7 @@ namespace jusha {
         return mSize;
       }
 
-      void resize(int size) 
+      void resize(int64_t size) 
       {
 #ifdef _DEBUG_
         std::cout << "new size " << size << " old size " << mSize << std::endl;
@@ -248,7 +268,9 @@ namespace jusha {
 
       T *getGpuPtr()
       {
+        //        printf("before enable gpu write  %p size %zd, %d %d\n", dvceBase, size(), isGpuValid, gpuAllocated);        
         enableGpuWrite();
+        //        printf("returning %p size %zd, %d %d\n", dvceBase, size(), isGpuValid, gpuAllocated);
         return dvceBase;
       }
   
@@ -442,7 +464,7 @@ namespace jusha {
       }
 
 
-    inline typename thrust::device_ptr<T> begin()
+    inline typename thrust::device_ptr<T> gbegin()
     //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer)); }
     { 
       enableGpuWrite();
@@ -450,7 +472,7 @@ namespace jusha {
     }
 
     /*! \brief Return the last iterator (the first invalid iterator) in the srt::vector */
-    inline typename thrust::device_ptr<T> end()
+    inline typename thrust::device_ptr<T> gend()
     //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer+m_size)); }
     { 
       enableGpuWrite();
@@ -458,7 +480,7 @@ namespace jusha {
     }
 
     /*! \brief Return the iterator to the first element in the srt::vector */
-    inline typename thrust::device_ptr<T> begin() const
+    inline typename thrust::device_ptr<T> gbegin() const
     //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer)); }
     { 
       enableGpuRead();
@@ -466,7 +488,7 @@ namespace jusha {
     }
 
     /*! \brief Return the last iterator (the first invalid iterator) in the srt::vector */
-    inline typename thrust::device_ptr<T> end() const
+    inline typename thrust::device_ptr<T> gend() const
     //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer+m_size)); }
     {
       enableGpuRead();
@@ -475,6 +497,17 @@ namespace jusha {
 
 
     private:
+      void init_state() {
+        mSize = 0;
+        mCapacity = 0;
+        hostBase = 0;
+        dvceBase = 0;
+        isCpuValid = false;
+        isGpuValid = false;
+        gpuAllocated = false;
+        cpuAllocated = false;
+      }
+      
       inline void allocateCpuIfNecessary()  const
       {
         if (!cpuAllocated && mSize)
@@ -570,6 +603,10 @@ namespace jusha {
         if (isGpuValid && !isCpuValid)
           {
             //            check_cuda_error("before memcpy", __FILE__, __LINE__);
+            if (size()) {
+              assert(dvceBase);
+              assert(hostBase);
+            }
 #ifdef _DEBUG_
             std::cout << "sync mirror array from device 0x" << std::hex << dvceBase.get() << " to host 0x" << hostBase.get() << " size(" << mSize << "); \n";
             /* assert(gHeapManager.find(CPU_HEAP, hostBase.get()) >= (mSize * (int)sizeof(T))); */
@@ -578,13 +615,16 @@ namespace jusha {
             assert(gHeapManager.find(GPU_HEAP, dvceBase) >= (mSize * (int)sizeof(T)));
 #endif
             //            cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
-            cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
+            if (mSize){
+              cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
+              printf("dvcebase %p to host %p size %zd\n", dvceBase, hostBase, mSize);
             //        std::cout << "memcpy d2h size:" << mSize*sizeof(T)  << std::endl;
-            assert(error == cudaSuccess);
+              assert(error == cudaSuccess);
+            }
           }
       }
 
-      size_t mSize;
+      int64_t mSize;
       int mCapacity;
 #if USE_SHARED_PTR
       mutable boost::shared_ptr<T> hostBase;
@@ -608,11 +648,16 @@ namespace jusha {
         isGpuValid = rhs.isGpuValid;
         gpuAllocated = rhs.gpuAllocated;
         cpuAllocated = rhs.cpuAllocated;
+        if (isGpuValid)
+          assert(gpuAllocated);
+        if (isCpuValid)
+          assert(cpuAllocated);
       }
 
       static curandGenerator_t curandGen;
   
     };
+
 
   } // cuda
 
@@ -621,6 +666,17 @@ namespace jusha {
   /* template <typename T> */
   /*   using JVector = cuda::MirroredArray<T>; */
   #define JVector jusha::cuda::MirroredArray
+
+  /* array operations */
+
+  // y = x0 * x1
+  template <class T>
+    void multiply(const JVector<T> &x0, const JVector<T> &x1, JVector<T> &y) ;
+
+  // norm 
+  template <class T>
+    void norm(const JVector<T> &vec);
+  
 } // jusha
 
 /*

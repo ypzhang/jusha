@@ -132,6 +132,7 @@ set(CPP_SRC_LIST
 set(CU_SRC_LIST
     src/cuda/utility.cu
     src/cuda/bitmap_scan.cu
+    src/cuda/array.cu    
 
     src/sparse/csr_matrix.cu    
 	src/sparse/mesh.cu
