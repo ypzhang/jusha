@@ -617,7 +617,7 @@ namespace jusha {
             //            cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
             if (mSize){
               cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
-              printf("dvcebase %p to host %p size %zd\n", dvceBase, hostBase, mSize);
+              //              printf("dvcebase %p to host %p size %zd\n", dvceBase, hostBase, mSize);
             //        std::cout << "memcpy d2h size:" << mSize*sizeof(T)  << std::endl;
               assert(error == cudaSuccess);
             }
