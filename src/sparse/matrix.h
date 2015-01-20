@@ -9,8 +9,8 @@ namespace jusha {
     Matrix(int64_t nrows, int64_t ncols): m_num_rows(nrows), m_num_cols(ncols){}
     virtual const JVector<T> &get_diag() const = 0;
 
-    int64_t get_num_rows() {  return m_num_rows; }
-    int64_t get_num_cols() {  return m_num_cols; }    
+    int64_t get_num_rows() const {  return m_num_rows; }
+    int64_t get_num_cols() const {  return m_num_cols; }    
   protected:
     int64_t m_num_rows;
     int64_t m_num_cols;    

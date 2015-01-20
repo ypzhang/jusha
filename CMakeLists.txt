@@ -118,6 +118,7 @@ set(CPP_SRC_LIST
     src/cuda/heap_manager.cpp
 
     src/sparse/solver/diag_precond.cpp
+    src/sparse/solver/jacobi_precond.cpp    
     
     src/sparse/matrix_reader.cpp
     src/sparse/mmio.cpp
