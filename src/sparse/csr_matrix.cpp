@@ -22,14 +22,22 @@ void CsrMatrix<T>::init(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, c
   m_cols.init(cols, m_nnz);
   m_coefs.init(coefs, m_nnz);
 
-  if (nrows == ncols)
+  if (nrows == ncols) {
     split_diag_coefs(nrows, m_row_ptrs, m_cols, m_coefs, m_diag, m_offd);
+    m_coefs.clear(); // save memory for square matrix
+  }
 }
 
 template <class T>  
 const JVector<T> &CsrMatrix<T>::get_diag() const
 {
   return m_diag;
+}
+
+template <class T>  
+const JVector<T> &CsrMatrix<T>::get_offd() const
+{
+  return m_offd;
 }
 
 

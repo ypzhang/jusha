@@ -45,4 +45,14 @@ void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const in
 template
 void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const int64_t *cols, const float* coefs, float *diag, float *offd);
 
+
+  template <bool safe_boundary>
+  __device__ void load_csr_row_to_shm(int *sh_csr_row, const int * __restrict__ csr_row, int idx, int bound_guard) {
+    if (safe_boundary || idx < bound_guard)
+      sh_csr_row[threadIdx.x] = csr_row[idx];
+    if (threadIdx.x == 0 && (safe_boundary || (idx + blockDim.x) < bound_guard))
+      sh_csr_row[blockDim.x] = csr_row[idx + blockDim.x];
+    __syncthreads();
+  }
+  
 }
