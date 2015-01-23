@@ -41,13 +41,16 @@ namespace jusha {
           }
       
       ~MirroredArray() {
+        destroy();
+      }
+
+      void destroy() {
         if (dvceBase)
           gHeapManager.NeFree(GPU_HEAP, dvceBase);
         if (hostBase)
           gHeapManager.NeFree(CPU_HEAP, hostBase);
-
+        init_state();
       }
-      
       // Copy Constructor
       MirroredArray(const MirroredArray<T> &rhs) 
         {
@@ -145,7 +148,12 @@ namespace jusha {
         dst.gpuAllocated = gpuAllocated;
         dst.cpuAllocated = cpuAllocated;
       }
-      
+
+      void clear()
+      {
+        resize(0);
+      }
+
       /* swap info between two arrays */
       void swap(MirroredArray<T> &rhs)
       {
@@ -171,6 +179,10 @@ namespace jusha {
 #endif
         if (size <= mCapacity)
           {
+            // free memory 
+            if (size == 0 && mSize > 0) {
+              destroy();
+            }
             mSize = size;
           }
         else // need to reallocate

@@ -30,7 +30,7 @@ endif (APPLE)
 #endif(NOT GLUT_FOUND)
 
 find_library (GLFW_LIB_LIBRARIES  NAMES glfw
-  PATHS /opt/local/lib
+  PATHS /opt/local/lib /usr/local /usr/local/lib
   REQUIRED
 )
 message(STATUS "Found glfw library @ ${GLFW_LIB_LIBRARIES}")
@@ -44,15 +44,22 @@ link_directories(${OpenGL_LIBRARY_DIRS})
 add_definitions(${OpenGL_DEFINITIONS})
 if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
+else ()
+	if (UNIX)
+	    set(GL_LIBRARIES GL GLU X11 Xxf86vm Xrandr Xi Xcursor  Xinerama)
+	endif()
+	if (APPLE)
+	    set(GL_LIBRARIES ${OPENGL_LIBRARIES})
+	endif()
+
 endif(NOT OPENGL_FOUND)
 message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
-find_package(HDF5 REQUIRED)
-
-find_library (HDF5HL_LIBRARY  NAMES hdf5_hl
-              PATHS ${HDF5_LIBRARY_DIRS}
-              )
+#find_package(HDF5 REQUIRED)
+#find_library (HDF5HL_LIBRARY  NAMES hdf5_hl
+#              PATHS ${HDF5_LIBRARY_DIRS}
+#              )
       
 # Possible build types.
 #if(NOT CMAKE_BUILD_TYPE)
@@ -93,7 +100,7 @@ include_directories(src)
 include_directories("${CMAKE_BINARY_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/cub-1.3.2")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
-include_directories("${HDF5_INCLUDE_DIRS}")
+#include_directories("${HDF5_INCLUDE_DIRS}")
 
       
 
@@ -187,7 +194,8 @@ target_link_libraries(jusha ${CUDA_curand_LIBRARY})
 target_link_libraries(jusha ${GLFW_LIB_LIBRARIES})
 #      message(STATUS, "hdf5 lib names ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES}")
 #      message(STATUS "hdf5 high level ${HDF5HL_LIBRARY}")
-target_link_libraries(jusha ${OPENGL_LIBRARIES}  ${HDF5_LIBRARIES} ${HDF5HL_LIBRARY})
+#target_link_libraries(jusha ${OPENGL_LIBRARIES}) #  ${HDF5_LIBRARIES} ${HDF5HL_LIBRARY})
+target_link_libraries(jusha ${GL_LIBRARIES}) #  ${HDF5_LIBRARIES} ${HDF5HL_LIBRARY})
 #configure_file("${CMAKE_SOURCE_DIR}/src/jusha_config.h.in.cmake" "${CMAKE_BINARY_DIR}/src/jusha_config.h")
 
 add_subdirectory (tests)

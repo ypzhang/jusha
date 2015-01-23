@@ -40,7 +40,7 @@ namespace yac {
     void parse_nmark(const std::string &line);
 
     // members:
-    int m_dims = 0;
+    int m_dims= 0;
     int m_elems = 0;
     int m_points = 0;
     int m_marks = 0;

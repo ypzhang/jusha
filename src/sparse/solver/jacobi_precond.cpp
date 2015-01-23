@@ -18,7 +18,7 @@ namespace jusha {
     assert(x.size() == m_matrix->get_num_rows());
     assert(y.size() == m_matrix->get_num_rows());
 
-    jacobi(m_matrix, x, y);
+    ///    jacobi(m_matrix, x, y);
   }
 
 }

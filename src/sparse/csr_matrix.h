@@ -24,8 +24,8 @@ public:
   virtual void init(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, const int64_t *cols, const T *coefs);
 
   virtual const JVector<T> &get_diag() const ;
-  virtual const JVector<T> &get_offd() const ;
-  virtual const JVector<T> &get_coef() const ;
+  //  virtual const JVector<T> &get_offd() const ;
+  //  virtual const JVector<T> &get_coef() const ;
 private:
   size_t m_nnz;
   JVector<int32_t> m_row_ptrs;
