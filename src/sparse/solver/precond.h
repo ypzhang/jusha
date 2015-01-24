@@ -49,8 +49,13 @@ namespace jusha {
   /********************************************************************
    *           Jacobi Preconditioner 
    ********************************************************************/
-  template <class T>
-    void jacobi(const Matrix<T> &matrix, const JVector<T> &x, JVector<T> &y);
+  /* template <class M> */
+  /*   void jacobi(const M &matrix, const JVector<T> &x, JVector<T> &y) */
+  /*   { */
+  /*     const JVector<T> &diag = matrix.get_diag(); */
+  /*     const Jvector<T> &csr_rowptr = matrix */
+  /*   } */
+  
   
   class JacobiPrecond : public PrecondBase {
   public:

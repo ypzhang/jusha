@@ -31,7 +31,6 @@ __global__ void split_diag_coefs_kernel(const int32_t *row_ptrs, const int64_t *
 template<typename T>
 void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const int64_t *cols, const T* coefs, T *diag, T *offd)
 {
-  printf("callign separate diag\n");
    int blocks = GET_BLOCKS(num_rows);
    blocks = CAP_BLOCK_SIZE(blocks);
    if (blocks > 0)
@@ -54,5 +53,30 @@ void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const in
       sh_csr_row[blockDim.x] = csr_row[idx + blockDim.x];
     __syncthreads();
   }
+
+
+
+__global__ void  
+csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __restrict__ coo_rows, int32_t N)
+{
+  __shared__ int32_t sh_csr[JC_cuda_blocksize+1];
+  int32_t row = kernel_get_1d_gid;
+  int stride = kernel_get_1d_stride;
+  for (; row < N - blockDim.x; row += stride) {
+    load_csr_row_to_shm(sh_csr,  csr_rows, row, 
+  }
   
+}
+  
+  void csr_row_to_coo_row(const JVector<int32_t> &csr_rows, const int32_t nrows, const int32_t nnzs, JVector<int32_t> &coo_rows) {
+    assert(csr_rows.size() == (nrows+1));
+    coo_rows.resize(nnzs);
+    int blocks = GET_BLOCKS(nrows);
+    blocks = CAP_BLOCK_SIZE(blocks);
+    if (blocks > 0)
+      csr_row_to_coo_row_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(csr_rows.getReadOnlyGpuPtr(),
+                                                                                  coo_rows.getGpuPtr(),
+                                                                                  nrows);
+    
+  }
 }

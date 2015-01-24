@@ -5,11 +5,14 @@ namespace jusha {
   namespace cuda {
     /*! \brief defines are used in device code
      */
-    #define JC_cuda_warpsize_shift 5
-    #define JC_cuda_warpsize_mask  0x1F
-    #define JC_cuda_blocksize      256
-    #define JC_cuda_max_blocks     64
-    #define JC_cuda_warpsize       32
+    #define JC_cuda_warpsize_shift  5
+    #define JC_cuda_warpsize_mask   0x1F
+    #define JC_cuda_blocksize       256
+    #define JC_cuda_blocksize_shift 8
+    #define JC_cuda_bs_mask         0xFF
+    #define JC_cuda_bs_mask2        0xFFFFFF00
+    #define JC_cuda_max_blocks      64
+    #define JC_cuda_warpsize        32
 
     class JCKonst {
     public:

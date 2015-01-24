@@ -23,7 +23,7 @@ TEST_CASE( "TestCoo2Csr", "[simple01]" ) {
   REQUIRE(csr[1] == 3);
   REQUIRE(csr[2] == 5);
   REQUIRE(csr[3] == 6);
-  REQUIRE(csr[4] == 10);  
+  REQUIRE(csr[4] == 10);
   //  printf("rows %d nnzs %d.\n", mm.num_rows(), mm.num_nnzs());
 }
 

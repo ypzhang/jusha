@@ -34,6 +34,7 @@ const JVector<T> &CsrMatrix<T>::get_diag() const
   return m_diag;
 }
 
+
 // template <class T>  
 // const JVector<T> &CsrMatrix<T>::get_offd() const
 // {
