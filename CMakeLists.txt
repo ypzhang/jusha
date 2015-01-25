@@ -29,7 +29,7 @@ endif (APPLE)
 #    message(ERROR " GLUT not found!")
 #endif(NOT GLUT_FOUND)
 
-find_library (GLFW_LIB_LIBRARIES  NAMES glfw
+find_library (GLFW_LIB_LIBRARIES  NAMES glfw glfw3
   PATHS /opt/local/lib /usr/local /usr/local/lib
   REQUIRED
 )
@@ -81,7 +81,7 @@ set(CUDA_BLOCKSIZE 256 CACHE STRING "CUDA block size.")
 # CUDA architecture options.
 set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
 set(GENCODE_SM35 "-gencode=arch=compute_35,code=sm_35")
-set(GENCODE_SM20 "-gencode=arch=compute_20,code=sm_20")
+#set(GENCODE_SM20 "-gencode=arch=compute_20,code=sm_20")
 
 # Base CUDA nvcc flags taken from the original makefiles.
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35})
@@ -171,10 +171,6 @@ set(HEADERS_LIST
 	src/sparse/view/2d_viewer.h
 	src/sparse/view/opengl_helper.h
 )
-
-if(UNIX)
-    add_definitions(-DRESTRICT=__restrict__)
-endif()
 
 
 # Must set this because size_t etc is shared between NVCC and Host - only really matters on Windows

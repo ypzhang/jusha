@@ -12,7 +12,7 @@ inline void my_unbind_x(const float4 * x)
 
 
 template <bool UseCache>
-__inline__ __device__ float4 my_fetch_x(const int& i, const float4 * RESTRICT x)
+__inline__ __device__ float4 my_fetch_x(const int& i, const float4 * __restrict__ x)
 {
 #ifndef DEBUG
   if (UseCache)

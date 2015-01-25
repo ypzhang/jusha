@@ -1,5 +1,6 @@
 #include "./csr_matrix.h"
 #include "cuda/cuda_config.h"
+#include "cuda/device/partition.cuh"
 
 namespace jusha {
 
@@ -60,15 +61,26 @@ __global__ void
 csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __restrict__ coo_rows, int32_t N)
 {
   __shared__ int32_t sh_csr[JC_cuda_blocksize+1];
+  __shared__ int32_t sh_coo[JC_cuda_blocksize];
   int32_t row = kernel_get_1d_gid;
   int stride = kernel_get_1d_stride;
+
+  
+  assert(blockDim.x == JC_cuda_blocksize);
+  bool is_last(false);
+  int bs_start, bs_end;
+  cuda::block_partition(N, blockDim.x, bs_start, bs_end, is_last);
+  if (threadIdx.x == 0) printf("bs_start %d bs_end %d for blockIdx %d.\n", bs_start, bs_end, blockIdx.x);
+  int cur_csr_in, next_csr_in;
+  
   for (; row < N - blockDim.x; row += stride) {
-    load_csr_row_to_shm(sh_csr,  csr_rows, row, 
+    //    load_csr_row_to_shm(sh_csr,  csr_rows, row, 
   }
   
 }
   
   void csr_row_to_coo_row(const JVector<int32_t> &csr_rows, const int32_t nrows, const int32_t nnzs, JVector<int32_t> &coo_rows) {
+    
     assert(csr_rows.size() == (nrows+1));
     coo_rows.resize(nnzs);
     int blocks = GET_BLOCKS(nrows);
@@ -76,7 +88,7 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
     if (blocks > 0)
       csr_row_to_coo_row_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(csr_rows.getReadOnlyGpuPtr(),
                                                                                   coo_rows.getGpuPtr(),
-                                                                                  nrows);
+                                                                                  nrows+1);
     
   }
 }

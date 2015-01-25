@@ -1,8 +1,11 @@
-#include "heap_manager.h"
+
 #include <cstdlib>
-#include "cuda_runtime.h"
 #include <cassert>
 #include <iostream>
+#include <cuda_runtime.h>
+
+#include "heap_manager.h"
+#include "utility.h"
 using namespace std;
 
 namespace jusha {
@@ -32,7 +35,14 @@ namespace jusha {
       }
     else if (type == GPU_HEAP)
       {
+	size_t free, total;
+	cudaMemGetInfo(&free, &total);
+        check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
         cudaMalloc(addr, size);
+	if (size && (*addr == 0))  {
+	  printf("allocating memory size %d failed, total %ld, free %ld\n", size, total, free);
+	}
+        check_cuda_error("cudaMalloc", __FILE__, __LINE__);
 #ifdef _DEBUG
         mGpuMemoryTracker.insert( pair<void *, int>(*addr, size));
         curGpuUsage += size;

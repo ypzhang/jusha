@@ -9,6 +9,8 @@ namespace {
 
 TEST_CASE( "test constructor", "[CSR Matrix]" ) {
   MatrixMarket mm;
+  cudaSetDevice(0);
+  check_cuda_error("cudasetdevice", __FILE__, __LINE__);
   mm.read_matrix(cubes2_sphere_filename.c_str());
   REQUIRE(mm.num_rows() == 101492);
   REQUIRE(mm.num_nnzs() == 874378);
@@ -43,7 +45,7 @@ TEST_CASE( "test constructor", "[CSR Matrix]" ) {
 //   REQUIRE(diag[0] == 364006.0716019724);
 //   REQUIRE(diag[1] == 504358.74952916644);
 // }
-TEST_CASE( "TestCoo2Csr", "[simple01]" ) {
+TEST_CASE( "A simple case", "[Test CSR to COO]" ) {
   //  std::vector<int> coo{0, 0,0, 1,1, 2, 3, 3, 3, 3 };
   std::vector<int> stl_csr_row{0, 3,5, 6, 10};
   JVector<int> csr_row;
@@ -59,4 +61,19 @@ TEST_CASE( "TestCoo2Csr", "[simple01]" ) {
   //  printf("rows %d nnzs %d.\n", mm.num_rows(), mm.num_nnzs());
 }
   
+TEST_CASE( "A simple case2", "[Test CSR to COO]" ) {
+  //  std::vector<int> coo{0, 0,0, 1,1, 2, 3, 3, 3, 3 };
+  // std::vector<int> stl_csr_row{0, 3,5, 6, 10};
+  // JVector<int> csr_row;
+  // csr_row.init(stl_csr_row.data(), stl_csr_row.size());
+  // JVector<int> coo_row(10);  
+  // csr_row_to_coo_row(csr_row, stl_csr_row.size()-1, stl_csr_row.back(), coo_row);
+  // REQUIRE(csr.size() == (num_rows+1));
+  // REQUIRE(csr[0] == 0);
+  // REQUIRE(csr[1] == 3);
+  // REQUIRE(csr[2] == 5);
+  // REQUIRE(csr[3] == 6);
+  // REQUIRE(csr[4] == 10);
+  //  printf("rows %d nnzs %d.\n", mm.num_rows(), mm.num_nnzs());
+}
 }
