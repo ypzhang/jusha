@@ -29,7 +29,7 @@ endif (APPLE)
 #    message(ERROR " GLUT not found!")
 #endif(NOT GLUT_FOUND)
 
-find_library (GLFW_LIB_LIBRARIES  NAMES glfw glfw3
+find_library (GLFW_LIB_LIBRARIES  NAMES glfw
   PATHS /opt/local/lib /usr/local /usr/local/lib
   REQUIRED
 )
@@ -81,10 +81,15 @@ set(CUDA_BLOCKSIZE 256 CACHE STRING "CUDA block size.")
 # CUDA architecture options.
 set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
 set(GENCODE_SM35 "-gencode=arch=compute_35,code=sm_35")
+set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 #set(GENCODE_SM20 "-gencode=arch=compute_20,code=sm_20")
 
 # Base CUDA nvcc flags taken from the original makefiles.
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35})
+if (APPLE)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM30})
+else ()
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35} ${GENCODE_SM50})
+endif()
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

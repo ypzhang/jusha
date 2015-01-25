@@ -62,21 +62,42 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
 {
   __shared__ int32_t sh_csr[JC_cuda_blocksize+1];
   __shared__ int32_t sh_coo[JC_cuda_blocksize];
+  __shared__ int32_t last_rowptr;
   int32_t row = kernel_get_1d_gid;
   int stride = kernel_get_1d_stride;
 
-  
-  assert(blockDim.x == JC_cuda_blocksize);
+  sh_csr[threadIdx.x] = 0;
+  //  assert(blockDim.x == JC_cuda_blocksize);
   bool is_last(false);
   int bs_start, bs_end;
-  cuda::block_partition(N, blockDim.x, bs_start, bs_end, is_last);
-  if (threadIdx.x == 0) printf("bs_start %d bs_end %d for blockIdx %d.\n", bs_start, bs_end, blockIdx.x);
-  int cur_csr_in, next_csr_in;
-  
+  const int batch_size = blockDim.x;
+  cuda::block_partition(N, batch_size, bs_start, bs_end, is_last);
+
+  if (bs_start == bs_end) return;
+  int curr_csr_in, next_csr_in;
+  int ele_start = bs_start * batch_size;
+  int ele_end = bs_end * batch_size;
+  ele_end = ele_end > N? N: ele_end;
+
+  curr_csr_in = ele_start + threadIdx.x < ele_end? csr_rows[ele_start + threadIdx.x] : -1;
+  next_csr_in = ele_start + batch_size + threadIdx.x < ele_end? csr_rows[ele_start + threadIdx.x + batch_size] : -1;
+  if (threadIdx.x == 0) printf("bs_start %d bs_end %d for blockIdx %d islast? %d ele %d to %d cur_csr_in %d. %d\n", bs_start, bs_end, blockIdx.x, is_last, ele_start, ele_end, curr_csr_in, csr_rows[0]);  
+  for (int bs = bs_start; bs < bs_end /*- 2*/; bs++) {
+    sh_csr[threadIdx.x] = curr_csr_in;
+    curr_csr_in = next_csr_in;
+    next_csr_in = bs * batch_size + (bs<<1) + threadIdx.x < ele_end? -1 : csr_rows[bs * batch_size + (bs<<1) + threadIdx.x];  // preload the next batch
+    if (threadIdx.x == 0) sh_csr[blockDim.x] = next_csr_in;
+    __syncthreads();
+    int col_start = sh_csr[0];
+    int col_end = sh_csr[blockDim.x];
+    printf("col_start %d end %d.\n", col_start, col_end);
+  }
+  //  if (
+  /*  
   for (; row < N - blockDim.x; row += stride) {
     //    load_csr_row_to_shm(sh_csr,  csr_rows, row, 
   }
-  
+  */
 }
   
   void csr_row_to_coo_row(const JVector<int32_t> &csr_rows, const int32_t nrows, const int32_t nnzs, JVector<int32_t> &coo_rows) {
@@ -89,6 +110,5 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
       csr_row_to_coo_row_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(csr_rows.getReadOnlyGpuPtr(),
                                                                                   coo_rows.getGpuPtr(),
                                                                                   nrows+1);
-    
   }
 }

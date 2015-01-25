@@ -1,10 +1,11 @@
-
+#include "heap_manager.h"
 #include <cstdlib>
+#include <cuda_runtime.h>
 #include <cassert>
 #include <iostream>
-#include <cuda_runtime.h>
 
-#include "heap_manager.h"
+
+
 #include "utility.h"
 using namespace std;
 
