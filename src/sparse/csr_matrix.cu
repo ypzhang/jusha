@@ -77,20 +77,22 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
   int curr_csr_in, next_csr_in;
   int ele_start = bs_start * batch_size;
   int ele_end = bs_end * batch_size;
-  ele_end = ele_end > N? N: ele_end;
+  ele_end = ele_end >= N? N: ele_end;
 
   curr_csr_in = ele_start + threadIdx.x < ele_end? csr_rows[ele_start + threadIdx.x] : -1;
   next_csr_in = ele_start + batch_size + threadIdx.x < ele_end? csr_rows[ele_start + threadIdx.x + batch_size] : -1;
   if (threadIdx.x == 0) printf("bs_start %d bs_end %d for blockIdx %d islast? %d ele %d to %d cur_csr_in %d. %d\n", bs_start, bs_end, blockIdx.x, is_last, ele_start, ele_end, curr_csr_in, csr_rows[0]);  
   for (int bs = bs_start; bs < bs_end /*- 2*/; bs++) {
+    int elem_block_base = bs * batch_size;
     sh_csr[threadIdx.x] = curr_csr_in;
     curr_csr_in = next_csr_in;
     next_csr_in = bs * batch_size + (bs<<1) + threadIdx.x < ele_end? -1 : csr_rows[bs * batch_size + (bs<<1) + threadIdx.x];  // preload the next batch
     if (threadIdx.x == 0) sh_csr[blockDim.x] = next_csr_in;
     __syncthreads();
     int col_start = sh_csr[0];
-    int col_end = sh_csr[blockDim.x];
-    printf("col_start %d end %d.\n", col_start, col_end);
+    int col_end = sh_csr[elem_block_base + batch_size < ele_end? blockDim.x : ele_end - elem_block_base];
+    printf("col_start %d end %d ele_end %d sh_csr[5] %d [4] %d id %d.\n", col_start, col_end, ele_end, sh_csr[5], sh_csr[4], ele_end-elem_block_base);
+    
   }
   //  if (
   /*  
