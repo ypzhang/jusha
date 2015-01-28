@@ -12,7 +12,10 @@ namespace jusha {
     //    virtual const JVector<T> &get_coef() const = 0;        
 
     int64_t get_num_rows() const {  return m_num_rows; }
-    int64_t get_num_cols() const {  return m_num_cols; }    
+    int64_t get_num_cols() const {  return m_num_cols; }
+
+    virtual const JVector<int> &get_rows() const = 0;
+    virtual const JVector<int64_t> &get_cols() const = 0;    
   protected:
     int64_t m_num_rows;
     int64_t m_num_cols;    

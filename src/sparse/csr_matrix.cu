@@ -92,9 +92,9 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
     __syncthreads();
     int col_start = sh_csr[0];
     int col_end = sh_csr[elem_block_base + batch_size < ele_end? blockDim.x : ele_end - elem_block_base];
-    printf("col_start %d end %d ele_end %d sh_csr[5] %d [4] %d id %d.\n", col_start, col_end, ele_end, sh_csr[5], sh_csr[4], ele_end-elem_block_base);
+    //    printf("col_start %d end %d ele_end %d sh_csr[5] %d [4] %d id %d.\n", col_start, col_end, ele_end, sh_csr[5], sh_csr[4], ele_end-elem_block_base);
     int iters = (col_end - col_start)+batch_size -1 / batch_size;
-    int my_row_end = sh_csr[threadidx.x+1];
+    int my_row_end = sh_csr[threadIdx.x+1];
     int my_iter = -1;
     if (my_row_end != -1) {
       

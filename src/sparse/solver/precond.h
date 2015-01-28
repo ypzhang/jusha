@@ -20,12 +20,13 @@ namespace jusha {
       return y;
     }
     
-    
     //    JVector<double> trans_solve (const JVector<double> &x) const;
 
     /* const double&         diag(int i) const { return diag_(i); } */
     /* double&           diag(int i) { return diag_(i); } */
-  protected:
+
+    const Matrix<double> *get_matrix() const { return m_matrix; }
+  private:
     const Matrix<double> *m_matrix = 0;
   };
 

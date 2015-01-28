@@ -22,17 +22,20 @@ public:
   }
     
   virtual void init(int64_t nrows, int64_t ncols, const int32_t *row_ptrs, const int64_t *cols, const T *coefs);
+  virtual void init_from_coo(int64_t nrows, int64_t ncols, int64_t nnz, const int32_t *rows, const int64_t *cols, const T *coefs);  
 
   virtual const JVector<T> &get_diag() const ;
 
-  const JVector<T> &get_rows() const;
+  const JVector<int> &get_rows() const ;
+  const JVector<int64_t> &get_cols() const ;    
+  
   //  virtual const JVector<T> &get_offd() const ;
   //  virtual const JVector<T> &get_coef() const ;
 private:
   void convert_rowptrs_to_rows();
   size_t m_nnz;
   JVector<int32_t> m_row_ptrs;
-  JVector<int32_t> m_rows;
+  JVector<int32_t> m_rows; // coo style rows
   JVector<int64_t> m_cols;
   JVector<T>       m_coefs;
   JVector<T>       m_diag;
