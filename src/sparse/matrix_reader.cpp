@@ -8,14 +8,12 @@
 
 namespace jusha {
   
-  void coo_to_csr_rows(const std::vector<int> coo_rows, const int &num_rows, std::vector<int> &row_ptrs)
+  void coo_to_csr_rows(const int *coo_rows, const size_t &num_rows, const size_t &nnz, int *row_ptrs)
   {
     // not the most efficient implementation but clear
     const int invalid_flag = -1;
-    row_ptrs.resize(num_rows + 1);
-    std::fill(row_ptrs.begin(), row_ptrs.end(), invalid_flag);
+    std::fill(row_ptrs, row_ptrs+num_rows+1, invalid_flag);
     
-    size_t nnz = coo_rows.size();
     int last_row = -1;
     for (size_t i = 0; i != nnz; i++) {
       int cur_row = coo_rows[i];
@@ -32,6 +30,34 @@ namespace jusha {
       assert(row_ptrs[i] != invalid_flag);
     }
   }
+
+
+  void coo_to_csr_rows(const std::vector<int> coo_rows, const int &num_rows, std::vector<int> &row_ptrs)
+  {
+    // not the most efficient implementation but clear
+    row_ptrs.resize(num_rows + 1);
+    size_t nnz = coo_rows.size();
+    coo_to_csr_rows(coo_rows.data(), num_rows, nnz, row_ptrs.data());
+    // std::fill(row_ptrs.begin(), row_ptrs.end(), invalid_flag);
+    
+
+    // int last_row = -1;
+    // for (size_t i = 0; i != nnz; i++) {
+    //   int cur_row = coo_rows[i];
+    //   if (cur_row  != last_row) 
+    //     row_ptrs[cur_row] = static_cast<int>(i);
+    //   last_row = cur_row;
+    // }
+    // row_ptrs[num_rows] = nnz;
+
+    // // handle zero rows
+    // for (int i = num_rows; i >= 0; --i) {
+    //   if (row_ptrs[i] == invalid_flag)
+    //     row_ptrs[i] = row_ptrs[i+1];
+    //   assert(row_ptrs[i] != invalid_flag);
+    // }
+  }
+  
   
   void Hdf5Matrix::read_matrix(const char *file_name) {
     // TODO

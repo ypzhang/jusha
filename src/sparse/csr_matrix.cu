@@ -45,7 +45,55 @@ void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const in
 template
 void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const int64_t *cols, const float* coefs, float *diag, float *offd);
 
+  /*************************************  *************************************/
+  
+template<typename T>
+__global__ void make_diag_first_kernel(const int32_t * __restrict__ row_ptrs, int64_t * __restrict__ cols, T* __restrict__ coefs, int64_t N)
+{
+    int64_t row = kernel_get_1d_gid;
+    int stride = kernel_get_1d_stride;
+    for (; row < N; row += stride) {
+      int row_start = row_ptrs[row];
+      int row_end = row_ptrs[row+1];
+      //      if (row == 0) printf("row start %d row end %d.\n", row_start, row_end);
+      if (row_start == row_end) continue;
+      int64_t first_col = cols[row_start];
+      T first_coef; 
+      if (first_col != row) first_coef = coefs[row_start];
+      else continue;
+      
+      for (int this_row = row_start+1; this_row < row_end; this_row++) {
+	int64_t this_col = cols[this_row];
+        if (this_col == row)  {
+	  // swap
+	  cols[row_start ]  = this_col;
+	  cols[this_row] = first_col;
+	  T this_coef = coefs[this_row];
+	  coefs[row_start] = this_coef;
+	  coefs[this_row] = first_coef;
+        } 
+      }
+    }
+}
+  
 
+template <class T>
+void make_diag_first(const int64_t &num_rows, const int32_t *row_ptrs, int64_t *cols, T *coefs)
+{
+   int blocks = GET_BLOCKS(num_rows);
+   blocks = CAP_BLOCK_SIZE(blocks);
+   if (blocks > 0)
+      make_diag_first_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(row_ptrs, cols, coefs, num_rows);
+}
+
+template 
+void make_diag_first(const int64_t &num_rows, const int32_t *row_ptrs, int64_t *cols, float *coefs);
+template 
+void make_diag_first(const int64_t &num_rows, const int32_t *row_ptrs, int64_t *cols, double *coefs);
+
+  
+  /*************************************  *************************************/
+  
   template <bool safe_boundary>
   __device__ void load_csr_row_to_shm(int *sh_csr_row, const int * __restrict__ csr_row, int idx, int bound_guard) {
     if (safe_boundary || idx < bound_guard)
@@ -81,7 +129,7 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
 
   curr_csr_in = ele_start + threadIdx.x < ele_end? csr_rows[ele_start + threadIdx.x] : -1;
   next_csr_in = ele_start + batch_size + threadIdx.x < ele_end? csr_rows[ele_start + threadIdx.x + batch_size] : -1;
-  if (threadIdx.x == 0) printf("bs_start %d bs_end %d for blockIdx %d islast? %d ele %d to %d cur_csr_in %d. %d\n", bs_start, bs_end, blockIdx.x, is_last, ele_start, ele_end, curr_csr_in, csr_rows[0]);  
+  //  if (threadIdx.x == 0) printf("bs_start %d bs_end %d for blockIdx %d islast? %d ele %d to %d cur_csr_in %d. %d\n", bs_start, bs_end, blockIdx.x, is_last, ele_start, ele_end, curr_csr_in, csr_rows[0]);  
   for (int bs = bs_start; bs < bs_end /*- 2*/; bs++) {
     int elem_block_base = bs * batch_size;
     sh_csr[threadIdx.x] = curr_csr_in;

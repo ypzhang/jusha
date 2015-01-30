@@ -15,14 +15,32 @@ TEST_CASE( "test constructor", "[CSR Matrix]" ) {
   REQUIRE(mm.num_rows() == 101492);
   REQUIRE(mm.num_nnzs() == 874378);
 
-  CsrMatrix<double> csr_matrix(mm.num_rows(), mm.num_cols(), mm.get_row_ptrs(), mm.get_cols(),
-                               mm.get_coefs());
+  SECTION ("init csr from csr format", "[CSR Matrix]")  {
 
-  REQUIRE(csr_matrix.get_num_rows() == mm.num_rows());
-  JVector<double> diag = csr_matrix.get_diag();
-  REQUIRE(diag.size() == mm.num_rows());
-  REQUIRE(diag[0] == 364006.0716019724);
-  REQUIRE(diag[1] == 504358.74952916644);
+    CsrMatrix<double> csr_matrix(mm.num_rows(), mm.num_cols(), mm.get_row_ptrs(), mm.get_cols(),
+				 mm.get_coefs());
+    
+    REQUIRE(csr_matrix.get_num_rows() == mm.num_rows());
+    
+    JVector<double> coefs = csr_matrix.get_coef();
+    //  REQUIRE(coefs.size() == mm.num_rows());
+    REQUIRE(coefs[0] == 364006.0716019724);
+    
+    //  REQUIRE(diag[1] == 504358.74952916644);
+  }
+  
+  SECTION ("init csr from coo format", "[CSR Matrix]")  {
+
+    CsrMatrix<double> csr_matrix;
+    csr_matrix.init_from_coo(mm.num_rows(), mm.num_cols(), mm.num_nnzs(), mm.get_rows(), mm.get_cols(), mm.get_coefs());
+    REQUIRE(csr_matrix.get_num_rows() == mm.num_rows());
+    
+    JVector<double> coefs = csr_matrix.get_coef();
+    //  REQUIRE(coefs.size() == mm.num_rows());
+    REQUIRE(coefs[0] == 364006.0716019724);
+    
+    //  REQUIRE(diag[1] == 504358.74952916644);
+  }
 }
 
 // TEST_CASE( "test csr row to coo row", "[CSR Matrix]" ) {

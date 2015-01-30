@@ -2,7 +2,6 @@
 
 namespace jusha {
   DiagPrecond::DiagPrecond(const Matrix<double> &matrix): PrecondBase(matrix) {
-    m_diag = matrix.get_diag();
   }
 
 

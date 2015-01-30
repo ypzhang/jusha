@@ -50,5 +50,6 @@ namespace jusha {
      
    */
   void coo_to_csr_rows(const std::vector<int> coo_rows, const int &num_rows, std::vector<int> &row_ptrs);
+  void coo_to_csr_rows(const int *coo_rows, const size_t &num_rows, const size_t &nnz, int *row_ptrs);  
   
 }

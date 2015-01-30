@@ -6,8 +6,8 @@ namespace jusha {
   template <typename T>
   class Matrix {
   public:
+   Matrix(): m_num_rows(0), m_num_cols(0){}    
     Matrix(int64_t nrows, int64_t ncols): m_num_rows(nrows), m_num_cols(ncols){}
-    virtual const JVector<T> &get_diag() const = 0;
     //    virtual const JVector<T> &get_offd() const = 0;
     //    virtual const JVector<T> &get_coef() const = 0;        
 
