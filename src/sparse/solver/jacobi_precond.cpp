@@ -12,7 +12,8 @@ namespace jusha {
     assert(x.size() == matrix->get_num_rows());
     assert(y.size() == matrix->get_num_rows());
 
-    // const JVector<int> &rows = matrix->get_rows();
+    
+    //    const JVector<int> &rows = matrix->get_rows();
     // const JVector<int> &cols = matrix->get_cols();    
     ///    jacobi(m_matrix, x, y);
   }
