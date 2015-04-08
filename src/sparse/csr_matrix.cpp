@@ -66,6 +66,12 @@ const JVector<int> &CsrMatrix<T>::get_rows() const
 }
 
 template <class T>  
+const JVector<int> &CsrMatrix<T>::get_csr_rows() const
+{
+  return m_row_ptrs;
+}
+  
+template <class T>  
 const JVector<int64_t> &CsrMatrix<T>::get_cols() const
 {
   return m_cols;

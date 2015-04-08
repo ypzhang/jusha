@@ -12,10 +12,10 @@
 #include "../utility.h"
 #include "./external_lib_wrapper.h"
 #include "./heap_manager.h"
-//#define USE_SHARED_PTR 1
+#define USE_SHARED_PTR 1
 
 #ifdef USE_SHARED_PTR
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #endif
 //extern cudaDeviceProp gDevProp;
 
@@ -46,9 +46,9 @@ namespace jusha {
 
       void destroy() {
         if (dvceBase)
-          gHeapManager.NeFree(GPU_HEAP, dvceBase);
+          gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
         if (hostBase)
-          gHeapManager.NeFree(CPU_HEAP, hostBase);
+          gHeapManager.NeFree(CPU_HEAP, hostBase.get());
         init_state();
       }
       // Copy Constructor
@@ -73,12 +73,12 @@ namespace jusha {
 #if USE_SHARED_PTR
         if (!needToFree)
           {
-            boost::shared_ptr<T> newDvceBase((T*)ptr, EmptyDeviceDeleter);
+            std::shared_ptr<T> newDvceBase((T*)ptr, EmptyDeviceDeleter);
             dvceBase = newDvceBase;
           }
         else
           {
-            boost::shared_ptr<T> newDvceBase((T*)ptr, GpuDeviceDeleter);
+            std::shared_ptr<T> newDvceBase((T*)ptr, GpuDeviceDeleter);
             dvceBase = newDvceBase;
           }
 #else
@@ -190,7 +190,7 @@ namespace jusha {
 #if USE_SHARED_PTR 
             if (gpuAllocated)
               {
-                boost::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(size*sizeof(T)), GpuDeviceDeleter);
+                std::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(size*sizeof(T)), GpuDeviceDeleter);
                 if (isGpuValid)
                   {
                     cudaError_t error = cudaMemcpy(newDvceBase.get(), dvceBase.get(), mSize*sizeof(T), cudaMemcpyDeviceToDevice);
@@ -201,7 +201,7 @@ namespace jusha {
               }
             if (cpuAllocated)
               {
-                boost::shared_ptr<T> newHostBase((T*)GpuHostAllocator(size*sizeof(T)), GpuHostDeleter);
+                std::shared_ptr<T> newHostBase((T*)GpuHostAllocator(size*sizeof(T)), GpuHostDeleter);
                 if (isCpuValid)
                   memcpy(newHostBase.get(), hostBase.get(), mSize*sizeof(T));
                 hostBase = newHostBase;            
@@ -256,26 +256,26 @@ namespace jusha {
       void zero()
       {
         enableGpuWrite();
-        cudaMemset((void *)dvceBase, 0, sizeof(T)*mSize);
+        cudaMemset((void *)dvceBase.get(), 0, sizeof(T)*mSize);
       }
 
 
       const T *getReadOnlyPtr() const
       {
         enableCpuRead();
-        return hostBase;
+        return hostBase.get();
       }
 
       T *getPtr()
       {
         enableCpuWrite();
-        return hostBase;
+        return hostBase.get();
       }
 
       const T *getReadOnlyGpuPtr() const
       {
         enableGpuRead();
-        return dvceBase;
+        return dvceBase.get();
       }
 
       T *getGpuPtr()
@@ -283,7 +283,7 @@ namespace jusha {
         //        printf("before enable gpu write  %p size %zd, %d %d\n", dvceBase, size(), isGpuValid, gpuAllocated);        
         enableGpuWrite();
         //        printf("returning %p size %zd, %d %d\n", dvceBase, size(), isGpuValid, gpuAllocated);
-        return dvceBase;
+        return dvceBase.get();
       }
   
       T &operator[](int index)
@@ -512,8 +512,8 @@ namespace jusha {
       void init_state() {
         mSize = 0;
         mCapacity = 0;
-        hostBase = 0;
-        dvceBase = 0;
+        hostBase.reset();
+        dvceBase.reset();
         isCpuValid = false;
         isGpuValid = false;
         gpuAllocated = false;
@@ -525,7 +525,7 @@ namespace jusha {
         if (!cpuAllocated && mSize)
           {
 #if USE_SHARED_PTR
-            boost::shared_ptr<T> newHostBase((T*)GpuHostAllocator(mSize*sizeof(T)), GpuHostDeleter);
+            std::shared_ptr<T> newHostBase((T*)GpuHostAllocator(mSize*sizeof(T)), GpuHostDeleter);
             hostBase = newHostBase;
 #else
             gHeapManager.NeMalloc(CPU_HEAP, (void**)&hostBase, mSize*sizeof(T));
@@ -543,8 +543,8 @@ namespace jusha {
           {
             //        cutilSafeCall(cudaMalloc((void**) &dvceBase, mSize * sizeof(T)));
 #if USE_SHARED_PTR
-            boost::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(mSize*sizeof(T)), GpuDeviceDeleter);
-            assert(newDvceBase != 0);
+            std::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(mSize*sizeof(T)), GpuDeviceDeleter);
+            assert(newDvceBase.get() != 0);
             dvceBase = newDvceBase;
 #else
             gHeapManager.NeMalloc(GPU_HEAP, (void**)&dvceBase, mSize * sizeof(T));
@@ -604,7 +604,7 @@ namespace jusha {
             std::cout << "sync mirror array from host 0x" << std::hex << hostBase.get() << " to device 0x" << dvceBase.get() << " size(" << mSize << "); \n";
 #endif
             //            cudaError_t error = cudaMemcpy(dvceBase.get(), hostBase.get(), mSize* sizeof(T), cudaMemcpyHostToDevice);
-            cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
+            cudaError_t error = cudaMemcpy(dvceBase.get(), hostBase.get(), mSize* sizeof(T), cudaMemcpyHostToDevice);
             //        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
             assert(error == cudaSuccess);
           }
@@ -628,7 +628,7 @@ namespace jusha {
 #endif
             //            cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
             if (mSize){
-              cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
+              cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
               //              printf("dvcebase %p to host %p size %zd\n", dvceBase, hostBase, mSize);
             //        std::cout << "memcpy d2h size:" << mSize*sizeof(T)  << std::endl;
               assert(error == cudaSuccess);
@@ -639,8 +639,8 @@ namespace jusha {
       int64_t mSize;
       int mCapacity;
 #if USE_SHARED_PTR
-      mutable boost::shared_ptr<T> hostBase;
-      mutable boost::shared_ptr<T> dvceBase;
+      mutable std::shared_ptr<T> hostBase;
+      mutable std::shared_ptr<T> dvceBase;
 #else
       mutable T *hostBase;
       mutable T *dvceBase;
@@ -675,8 +675,8 @@ namespace jusha {
 
 
   // aliasing C++11 feature
-  /* template <typename T> */
-  /*   using JVector = cuda::MirroredArray<T>; */
+  /*  template <typename T> 
+      using JVector = cuda::MirroredArray<T>;*/
   #define JVector jusha::cuda::MirroredArray
 
   /* array operations */

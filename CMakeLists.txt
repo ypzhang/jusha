@@ -68,7 +68,7 @@ set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 #    FORCE)
 #endif()
 
-#set(CUDA_SEPARABLE_COMPILATION ON)
+set(CUDA_SEPARABLE_COMPILATION ON)
 set(BUILD_SHARED_LIBS OFF)
 
 
@@ -79,14 +79,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Werror")
 set(CUDA_BLOCKSIZE 256 CACHE STRING "CUDA block size.")
 
 # CUDA architecture options.
-set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
+#set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
 set(GENCODE_SM35 "-gencode=arch=compute_35,code=sm_35")
 set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 #set(GENCODE_SM20 "-gencode=arch=compute_20,code=sm_20")
 
 # Base CUDA nvcc flags taken from the original makefiles.
 if (APPLE)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM30})
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35})
 else ()
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35} ${GENCODE_SM50})
 endif()
@@ -106,7 +106,7 @@ include_directories("${CMAKE_BINARY_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/cub-1.3.2")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
 #include_directories("${HDF5_INCLUDE_DIRS}")
-
+#include_directories("${HEMI_ROOT})
       
 
 # this flag is for gcc only

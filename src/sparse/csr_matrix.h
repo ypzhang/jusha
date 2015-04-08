@@ -17,6 +17,7 @@ void csr_row_to_coo_row(const JVector<int32_t> &csr_rows, const int32_t nrows, c
  * if not, only m_coefs are available 
  * m_rowptrs are changed accordingly 
  */
+  typedef uint32_t rowptr_t;
 template <typename T>
 class CsrMatrix: public Matrix<T>{
 public:
@@ -30,16 +31,17 @@ public:
 
 
   const JVector<int> &get_rows() const ;
-  const JVector<int64_t> &get_cols() const ;    
+  const JVector<col_type> &get_cols() const ;
+  const JVector<int> &get_csr_rows() const;  
   
   //  virtual const JVector<T> &get_offd() const ;
   virtual const JVector<T> &get_coef() const { return m_coefs; }
 private:
   void convert_rowptrs_to_rows();
   size_t m_nnz;
-  JVector<int32_t> m_row_ptrs;
+  JVector<row_type> m_row_ptrs;
   JVector<int32_t> m_rows; // coo style rows
-  JVector<int64_t> m_cols;
+  JVector<col_type> m_cols;
   JVector<T>       m_coefs;
   
   //  JVector<T>       m_diag;
@@ -47,5 +49,6 @@ private:
   
 };
 
-
+  template <typename T>
+  void jacobi_smooth(const CsrMatrix<T> &matrix, const JVector<T> &x, const JVector<T> &y);
 } // namespace jusha

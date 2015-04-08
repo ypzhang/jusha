@@ -164,8 +164,59 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
     int blocks = GET_BLOCKS(nrows);
     blocks = CAP_BLOCK_SIZE(blocks);
     if (blocks > 0)
-      csr_row_to_coo_row_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(csr_rows.getReadOnlyGpuPtr(),
-                                                                                  coo_rows.getGpuPtr(),
-                                                                                  nrows+1);
+      csr_row_to_coo_row_kernel<<<blocks, JCUDA_BS>>>(csr_rows.getReadOnlyGpuPtr(),
+						      coo_rows.getGpuPtr(),
+						      nrows+1);
   }
+
+
+  /*************************************  *************************************/
+  /******************************Jacobian Smoothing for CSR matrix  ***********/
+  /*************************************  *************************************/
+  template <typename T>
+  __global__ void jacobi_smooth_kernel(const int32_t *__restrict__ rowptrs,
+				       const int64_t *__restrict__ col,
+				       const T       *__restrict__ coefs,
+				       const T       *__restrict__ x,
+				       T             *__restrict__ y,
+				       int                         N)
+  {
+    int64_t row = kernel_get_1d_gid;
+    int stride = kernel_get_1d_stride;
+    for (; row < N; row += stride) {
+      T my_x = x[row];
+      int row_start = rowptrs[row];
+      int row_end = rowptrs[row+1];
+      T diag;
+      for (int this_row = row_start; this_row < row_end; this_row++) {
+	//	int64_t col = 
+      }
+      y[row] = my_x;
+    }
+
+  }
+  
+template <typename T>
+void jacobi_smooth(const CsrMatrix<T> &matrix, const JVector<T> &x, const JVector<T> &y)
+{
+  const JVector<T> &coefs = matrix.get_coef();
+  const JVector<int> &rowptrs = matrix.get_csr_rows();
+  const JVector<int64_t> &cols  = matrix.get_cols();
+  int64_t nrows = matrix.get_num_rows();
+  int blocks = GET_BLOCKS(nrows);
+  blocks = CAP_BLOCK_SIZE(blocks);
+  if (blocks > 0) 
+    jacobi_smooth_kernel<<<blocks, JCUDA_BS>>>(rowptrs.getReadOnlyGpuPtr(),
+					       cols.getReadOnlyGpuPtr(),
+					       coefs.getReadOnlyGpuPtr(),
+					       x.getReadOnlyGpuPtr(),
+					       y.getGpuPtr(),
+					       nrows);
+  
+}
+  
+template <>
+void jacobi_smooth(const CsrMatrix<double> &matrix, const JVector<double> &x, const JVector<double> &y);
+
+  
 }
