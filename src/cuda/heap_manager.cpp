@@ -36,13 +36,13 @@ namespace jusha {
       }
     else if (type == GPU_HEAP)
       {
-	size_t free, total;
-	cudaMemGetInfo(&free, &total);
+        size_t free, total;
+        cudaMemGetInfo(&free, &total);
         check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
         cudaMalloc(addr, size);
-	if (size && (*addr == 0))  {
-	  printf("allocating memory size %d failed, total %ld, free %ld\n", size, total, free);
-	}
+        if (size && (*addr == 0))  {
+          printf("allocating memory size %d failed, total %ld, free %ld\n", size, total, free);
+        }
         check_cuda_error("cudaMalloc", __FILE__, __LINE__);
 #ifdef _DEBUG
         mGpuMemoryTracker.insert( pair<void *, int>(*addr, size));
@@ -52,7 +52,6 @@ namespace jusha {
       }
     else
       assert(0);
-
   }
 
   int HeapManager::find(Memory_Type type, void *addr)

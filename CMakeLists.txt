@@ -69,10 +69,9 @@ set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 #endif()
 
 set(CUDA_SEPARABLE_COMPILATION ON)
-set(BUILD_SHARED_LIBS OFF)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Werror")
 #set(CUDA_PROPAGATE_HOST_FLAGS ON)
 
 
@@ -85,15 +84,15 @@ set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 #set(GENCODE_SM20 "-gencode=arch=compute_20,code=sm_20")
 
 # Base CUDA nvcc flags taken from the original makefiles.
-if (APPLE)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35})
-else ()
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35} ${GENCODE_SM50})
-endif()
-
+#if (APPLE)
+#set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35})
+#else ()
+#set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35} ${GENCODE_SM50})
+#endif()
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35} ${GENCODE_SM50})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O0 -DDEBUG -g")
+#  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O0 -DDEBUG -g")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
 else()
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
@@ -119,7 +118,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 #set (CMAKE_CXX_COMPILER g++)
 
 elseif (UNIX)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 #-std=c++0x
 # Split the library in two parts, the CUDA one and the CPP one.
@@ -183,11 +182,16 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 
 if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
-  cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST})
+  cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35})
 #  target_link_library(jusha jusha_c jusha_cu)
 else()
 #  cuda_add_library(jusha SHARED ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha STATIC ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
+endif()
+
+if (UNIX)
+target_link_libraries(jusha /usr/local/cuda-7.0/lib64/libcudadevrt.a)
 endif()
 
 target_link_libraries(jusha ${CUDA_curand_LIBRARY})

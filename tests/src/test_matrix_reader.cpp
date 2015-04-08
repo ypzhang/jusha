@@ -6,6 +6,7 @@ using namespace jusha;
 
 namespace {
 TEST_CASE( "TestMatrixReader", "[2cubes_sphere]" ) {
+
   MatrixMarket mm;
   mm.read_matrix(cubes2_sphere_filename.c_str());  
   REQUIRE(mm.num_rows() == 101492);

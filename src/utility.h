@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cstdio>
 #include <cuda_runtime_api.h>
 
 namespace jusha {

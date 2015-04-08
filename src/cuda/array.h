@@ -12,11 +12,10 @@
 #include "../utility.h"
 #include "./external_lib_wrapper.h"
 #include "./heap_manager.h"
-#define USE_SHARED_PTR 1
+//#define USE_SHARED_PTR 1
+#include <cstddef>
+//#include <memory>
 
-#ifdef USE_SHARED_PTR
-#include <memory>
-#endif
 //extern cudaDeviceProp gDevProp;
 
 
@@ -46,9 +45,13 @@ namespace jusha {
 
       void destroy() {
         if (dvceBase)
+#ifdef USE_SHARED_PTR
           gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
+#else
+          gHeapManager.NeFree(GPU_HEAP, dvceBase);
+#endif
         if (hostBase)
-          gHeapManager.NeFree(CPU_HEAP, hostBase.get());
+          gHeapManager.NeFree(CPU_HEAP, hostBase);
         init_state();
       }
       // Copy Constructor
@@ -193,7 +196,7 @@ namespace jusha {
                 std::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(size*sizeof(T)), GpuDeviceDeleter);
                 if (isGpuValid)
                   {
-                    cudaError_t error = cudaMemcpy(newDvceBase.get(), dvceBase.get(), mSize*sizeof(T), cudaMemcpyDeviceToDevice);
+                    cudaError_t error = cudaMemcpy(newDvcebase, dvcebase, mSize*sizeof(T), cudaMemcpyDeviceToDevice);
                     //            std::cout << "memcpy d2d size:" << mSize*sizeof(T)  << std::endl;
                     assert(error == cudaSuccess);
                   }
@@ -203,7 +206,7 @@ namespace jusha {
               {
                 std::shared_ptr<T> newHostBase((T*)GpuHostAllocator(size*sizeof(T)), GpuHostDeleter);
                 if (isCpuValid)
-                  memcpy(newHostBase.get(), hostBase.get(), mSize*sizeof(T));
+                  memcpy(newHostBase, hostBase, mSize*sizeof(T));
                 hostBase = newHostBase;            
               }
             mSize = size;
@@ -256,26 +259,26 @@ namespace jusha {
       void zero()
       {
         enableGpuWrite();
-        cudaMemset((void *)dvceBase.get(), 0, sizeof(T)*mSize);
+        cudaMemset((void *)dvceBase, 0, sizeof(T)*mSize);
       }
 
 
       const T *getReadOnlyPtr() const
       {
         enableCpuRead();
-        return hostBase.get();
+        return hostBase;
       }
 
       T *getPtr()
       {
         enableCpuWrite();
-        return hostBase.get();
+        return hostBase;
       }
 
       const T *getReadOnlyGpuPtr() const
       {
         enableGpuRead();
-        return dvceBase.get();
+        return dvceBase;
       }
 
       T *getGpuPtr()
@@ -283,7 +286,7 @@ namespace jusha {
         //        printf("before enable gpu write  %p size %zd, %d %d\n", dvceBase, size(), isGpuValid, gpuAllocated);        
         enableGpuWrite();
         //        printf("returning %p size %zd, %d %d\n", dvceBase, size(), isGpuValid, gpuAllocated);
-        return dvceBase.get();
+        return dvceBase;
       }
   
       T &operator[](int index)
@@ -309,11 +312,11 @@ namespace jusha {
         assert(index < mSize);
         assert(isCpuValid || isGpuValid);
         if (isCpuValid)
-          //          return hostBase.get()[index];
+          //          return hostBase[index];
           return hostBase[index];
         T ele; 
         allocateCpuIfNecessary();
-        //        cudaError_t error = cudaMemcpy(&ele, dvceBase.get()+index, sizeof(T),cudaMemcpyDeviceToHost); 
+        //        cudaError_t error = cudaMemcpy(&ele, dvcebase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         cudaError_t error = cudaMemcpy(&ele, dvceBase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         //    std::cout << "memcpy d2h size:" << sizeof(T)  << std::endl;
         assert(error == cudaSuccess);
@@ -325,11 +328,11 @@ namespace jusha {
         assert(index < mSize);
         assert(isCpuValid || isGpuValid);
         if (isCpuValid)
-          //          hostBase.get()[index] = value;
+          //          hostBase[index] = value;
           hostBase[index] = value;
         if (isGpuValid)
           {
-            //            cudaError_t error = cudaMemcpy(dvceBase.get()+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
+            //            cudaError_t error = cudaMemcpy(dvcebase+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
             cudaError_t error = cudaMemcpy(dvceBase+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
             assert(error == cudaSuccess);
           }
@@ -512,8 +515,10 @@ namespace jusha {
       void init_state() {
         mSize = 0;
         mCapacity = 0;
-        hostBase.reset();
-        dvceBase.reset();
+        //        hostBase.reset();
+        //        dvceBase.reset();
+        hostBase = 0;//nullptr;
+        dvceBase = 0; //nullptr;
         isCpuValid = false;
         isGpuValid = false;
         gpuAllocated = false;
@@ -544,7 +549,7 @@ namespace jusha {
             //        cutilSafeCall(cudaMalloc((void**) &dvceBase, mSize * sizeof(T)));
 #if USE_SHARED_PTR
             std::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(mSize*sizeof(T)), GpuDeviceDeleter);
-            assert(newDvceBase.get() != 0);
+            assert(newDvcebase != 0);
             dvceBase = newDvceBase;
 #else
             gHeapManager.NeMalloc(GPU_HEAP, (void**)&dvceBase, mSize * sizeof(T));
@@ -601,10 +606,10 @@ namespace jusha {
         if (isCpuValid && !isGpuValid)
           {
 #ifdef _DEBUG_
-            std::cout << "sync mirror array from host 0x" << std::hex << hostBase.get() << " to device 0x" << dvceBase.get() << " size(" << mSize << "); \n";
+            std::cout << "sync mirror array from host 0x" << std::hex << hostBase << " to device 0x" << dvcebase << " size(" << mSize << "); \n";
 #endif
-            //            cudaError_t error = cudaMemcpy(dvceBase.get(), hostBase.get(), mSize* sizeof(T), cudaMemcpyHostToDevice);
-            cudaError_t error = cudaMemcpy(dvceBase.get(), hostBase.get(), mSize* sizeof(T), cudaMemcpyHostToDevice);
+            //            cudaError_t error = cudaMemcpy(dvcebase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
+            cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
             //        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
             assert(error == cudaSuccess);
           }
@@ -620,15 +625,15 @@ namespace jusha {
               assert(hostBase);
             }
 #ifdef _DEBUG_
-            std::cout << "sync mirror array from device 0x" << std::hex << dvceBase.get() << " to host 0x" << hostBase.get() << " size(" << mSize << "); \n";
-            /* assert(gHeapManager.find(CPU_HEAP, hostBase.get()) >= (mSize * (int)sizeof(T))); */
-            /* assert(gHeapManager.find(GPU_HEAP, dvceBase.get()) >= (mSize * (int)sizeof(T))); */
+            std::cout << "sync mirror array from device 0x" << std::hex << dvceBase << " to host 0x" << hostBase << " size(" << mSize << "); \n";
+            /* assert(gHeapManager.find(CPU_HEAP, hostBase) >= (mSize * (int)sizeof(T))); */
+            /* assert(gHeapManager.find(GPU_HEAP, dvcebase) >= (mSize * (int)sizeof(T))); */
             assert(gHeapManager.find(CPU_HEAP, hostBase) >= (mSize * (int)sizeof(T)));
             assert(gHeapManager.find(GPU_HEAP, dvceBase) >= (mSize * (int)sizeof(T)));
 #endif
-            //            cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
+            //            cudaError_t error = cudaMemcpy(hostBase, dvcebase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
             if (mSize){
-              cudaError_t error = cudaMemcpy(hostBase.get(), dvceBase.get(), mSize * sizeof(T),cudaMemcpyDeviceToHost);
+              cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
               //              printf("dvcebase %p to host %p size %zd\n", dvceBase, hostBase, mSize);
             //        std::cout << "memcpy d2h size:" << mSize*sizeof(T)  << std::endl;
               assert(error == cudaSuccess);
@@ -639,11 +644,11 @@ namespace jusha {
       int64_t mSize;
       int mCapacity;
 #if USE_SHARED_PTR
-      mutable std::shared_ptr<T> hostBase;
-      mutable std::shared_ptr<T> dvceBase;
+      std::shared_ptr<T> hostBase;
+      std::shared_ptr<T> dvceBase;
 #else
-      mutable T *hostBase;
-      mutable T *dvceBase;
+      mutable T *hostBase = 0;
+      mutable T *dvceBase = 0;
 #endif
       mutable bool isCpuValid;
       mutable bool isGpuValid;
