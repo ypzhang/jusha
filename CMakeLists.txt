@@ -92,10 +92,11 @@ set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35} ${GENCODE_SM50})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O0 -DDEBUG -g")
+  set(CUDA_NVCC_FLAGS "-O0" "-g")
+  add_definitions("-DDEBUG")	
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
 else()
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
+  set(CUDA_NVCC_FLAGS "-O3")
 endif()
 
 
@@ -148,6 +149,8 @@ set(CU_SRC_LIST
 
     src/sparse/csr_matrix.cu    
 	src/sparse/mesh.cu
+    src/cuda/heap_allocator.cu
+
 #    src/cuda/dummy.cu
 
 	src/sparse/view/2d_viewer.cu
@@ -160,7 +163,9 @@ set(HEADERS_LIST
 
     src/cuda/bitmap_scan.h
     src/cuda/heap_manager.h
+    src/cuda/heap_allocator.h
     src/cuda/array.h
+    src/cuda/allocator.h
 
     src/sparse/matrix.h
     src/sparse/csr_matrix.h
