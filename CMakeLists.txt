@@ -114,10 +114,6 @@ set (CMAKE_MACOSX_RPATH On)
 
 if (APPLE)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
-#set (CUDA_HOST_COMPILER g++)
-#set (CMAKE_CXX_COMPILER g++)
-
 elseif (UNIX)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
@@ -128,6 +124,7 @@ set(CPP_SRC_LIST
     src/timer.cpp
     src/cuda/cuda_config.cpp
     src/cuda/heap_manager.cpp
+    src/cuda/heap_allocator.cpp
 
     src/sparse/solver/diag_precond.cpp
     src/sparse/solver/jacobi_precond.cpp    
@@ -149,7 +146,7 @@ set(CU_SRC_LIST
 
     src/sparse/csr_matrix.cu    
 	src/sparse/mesh.cu
-    src/cuda/heap_allocator.cu
+
 
 #    src/cuda/dummy.cu
 
