@@ -1,6 +1,14 @@
 #include "heap_allocator.h"
 
 namespace jusha {
+
+  bool Bin::insert(const size_t &request_size) {
+    for (auto i = m_bins.begin(); i != m_bins.end(); i++) {
+      //      i->insert();
+    }
+    return true;
+  }
+
    void bin_index(const size_t bsize, int &bin_id, size_t &bin_bsize) 
   {
     if (bsize <= MIN_BLOCK_BSIZE) {

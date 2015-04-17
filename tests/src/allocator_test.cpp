@@ -42,18 +42,23 @@ TEST_CASE( "HeapManager", "[simple]" ) {
 }
 
 TEST_CASE( "HeapSubBin", "[simple]" ) {
-  std::list<std::unique_ptr<SubBin>> bins;
-  bins.emplace_back(std::unique_ptr<SubBin>(new SubBin()));
-  bins.back()->init(20, SUB_BIN_SIZE);
+  SubBin bin;
+  bin.init(20, SUB_BIN_SIZE);
   size_t index;
-  for (int i = 0; i != SUB_BIN_SIZE; i++) {
-    REQUIRE(bins.back()->insert(index));
-    REQUIRE(index == i);
-  }
-  REQUIRE(bins.back()->insert(index)== false);
+  REQUIRE(bin.is_empty());
+  std::vector<float *> ptrs(SUB_BIN_SIZE);
   for (size_t i = 0; i != SUB_BIN_SIZE; i++) {
-    bins.back()->remove(i);
+    ptrs[i] = (float*)bin.insert();
+    REQUIRE(ptrs[i] != nullptr);
+    //    REQUIRE(index == i);
+    REQUIRE(bin.count_used() == (i+1));
   }
+  REQUIRE(bin.is_full());
+  //  REQUIRE(bin.insert(index)== false);
+  for (size_t i = 0; i != SUB_BIN_SIZE; i++) {
+    REQUIRE(bin.remove(ptrs[i]));
+  }
+  REQUIRE(bin.is_empty());
 }
 
 TEST_CASE( "HeapBin", "[simple]" ) {

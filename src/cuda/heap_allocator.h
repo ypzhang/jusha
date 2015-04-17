@@ -38,6 +38,7 @@ namespace jusha {
     }
 #endif
     bool init(size_t block_size, int BIN_SIZE) {
+      m_block_size = block_size;
       size_t bytes_this_sub_bin = block_size * BIN_SIZE;
       char *base = 0;
       cudaMalloc((void**)(&base), bytes_this_sub_bin);
@@ -52,27 +53,33 @@ namespace jusha {
       return true;
     }
 
-    bool insert(size_t &index) {
+    void *insert() {
       if (is_full()) {
-        index = -1;
-        return false;
+        return nullptr;
       }
-      for (index = 0; index != m_used.size();index++) {
+      size_t index = 0;
+      for (; index != m_used.size();index++) {
         if (!m_used[index]) {
           m_used[index] = true;
           m_used_count++;
           break;
         }
       }
-      return true;
+      return (void *)(get_ptr() + index*m_block_size);
     }
 
-    void remove(const size_t &index){
-      assert(m_used.size() > index);
-      assert(m_used[index]);
-      m_used[index] = false;
-      m_used_count--;
+    bool remove(void *ptr) {
+      if (is_in_range(ptr)) {
+        size_t index = ((char*)ptr - get_ptr())/m_block_size;
+        assert(m_used.size() > index);
+        assert(m_used[index]);
+        m_used[index] = false;
+        m_used_count--;
+        return true;
+      }
+      return false;
     }
+
 
     bool is_full() const {
       return (m_used_count == m_used.size());
@@ -82,20 +89,41 @@ namespace jusha {
       return (m_used_count == 0);
     }
     
-    bool count_used() const {
+    size_t count_used() const {
       return m_used_count;
     }
+    
+    char *get_ptr() { return m_base.get(); }
+
+    size_t bin_size() const { return m_used.size(); }
   private:
+    bool is_in_range(void *ptr) {
+      if (m_base.get() == NULL)
+        return false;
+      if (ptr >= m_base.get() && ptr < m_base.get() + m_block_size * bin_size())
+        return true;
+      return false;
+    }
+
+    size_t m_block_size  = 0;
     std::unique_ptr<char, cuda_heap_deleter<char>> m_base;
     std::vector<bool> m_used;
-    size_t m_used_count;
-  };
+    size_t m_used_count = 0;
+    };
 
   class Bin {
   public:
-    
+    void init(size_t block_size, bool fixing_size=false) {
+      m_block_size = block_size;
+      m_fixing_block_size = fixing_size;
+    }
+
+    bool insert(const size_t &request_size);
+
   private:
-    std::list<std::unique_ptr<SubBin>> bins;
+    bool m_fixing_block_size = false;
+    size_t m_block_size = 0;
+    std::list<std::unique_ptr<SubBin>> m_bins;
   };
 
   class BinMeta {
@@ -191,4 +219,3 @@ private:
   };
 
   }
-
