@@ -11,6 +11,7 @@ namespace jusha {
   // create a bin for each size ranging [2^MIN_BLOCK_SHIFT, 2^MAX_BLOCK_SHIFT], each bin will grow by SUB_BIN_SIZE each time runs out of entries
   // for memory request larger than 2^MAX_BLOCK_SHIFT, track them one by one (SUB_BIN_SIZE is 1), in the last bin
 #define DEBUG_HEAP_ALLOC
+#undef DEBUG_HEAP_ALLOC
 extern  size_t g_current_alloc_bsize;
 
   template <class T>

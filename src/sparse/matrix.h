@@ -1,4 +1,5 @@
 #pragma once
+#include "./distri_obj.h"
 #include "cuda/array.h"
 
 namespace jusha {
@@ -7,7 +8,7 @@ namespace jusha {
   typedef int64_t col_type;
 
   template <typename T>
-  class Matrix {
+  class Matrix : public DistriObj {
   public:
     Matrix(): m_total_rows(0), m_num_rows(0), m_num_cols(0){}    
     Matrix(int64_t nrows, int64_t ncols): m_num_rows(nrows), m_num_cols(ncols){}

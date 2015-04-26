@@ -16,5 +16,6 @@ cuda_add_executable(jutest  src/unit_test.cpp
 #                            src/test_csr_matrix.cpp
 #			    src/foreach_test.cu
 	src/allocator_test.cpp
+	src/distri_obj_test.cpp
                             )
 target_link_libraries(jutest jusha)

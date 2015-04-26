@@ -128,7 +128,7 @@ set(CPP_SRC_LIST
 
     src/sparse/solver/diag_precond.cpp
     src/sparse/solver/jacobi_precond.cpp    
-    
+	src/sparse/distri_obj.cpp    
     src/sparse/matrix_reader.cpp
     src/sparse/mmio.cpp
     src/sparse/csr_matrix.cpp
@@ -165,6 +165,7 @@ set(HEADERS_LIST
     src/cuda/allocator.h
 
     src/sparse/matrix.h
+	src/sparse/distri_obj.h    
     src/sparse/csr_matrix.h
     src/sparse/matrix_reader.h
     src/sparse/mmio.h
