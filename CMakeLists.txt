@@ -162,6 +162,7 @@ set(HEADERS_LIST
     src/cuda/heap_manager.h
     src/cuda/heap_allocator.h
     src/cuda/array.h
+    src/cuda/array_util.h
     src/cuda/allocator.h
 
     src/sparse/matrix.h

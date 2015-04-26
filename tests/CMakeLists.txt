@@ -14,8 +14,8 @@ cuda_add_executable(jutest  src/unit_test.cpp
 #                            src/test_viewer.cpp
 #                            src/test_matrix_reader.cpp
 #                            src/test_csr_matrix.cpp
-#			    src/foreach_test.cu
+			    src/foreach_test.cu
 	src/allocator_test.cpp
 	src/distri_obj_test.cpp
-                            )
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35})
 target_link_libraries(jutest jusha)

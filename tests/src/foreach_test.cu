@@ -12,7 +12,6 @@ __global__ void kernel(int N)
   
 }
 
-
 class AtomicAdd: public ForEachKernel<StridePolicy, JC_cuda_blocksize, false> 
 {
 public:
