@@ -1,8 +1,9 @@
-#include "heap_manager.h"
 #include <cstdlib>
 #include <cuda_runtime.h>
 #include <cassert>
 #include <iostream>
+#include "heap_manager.h"
+#include "heap_allocator.h"
 
 
 
@@ -11,6 +12,11 @@ using namespace std;
 
 namespace jusha {
   HeapManager gHeapManager;
+  int HeapManager::max_device_ids = 32;
+
+  HeapManager::HeapManager() {
+    mGpuHeapAllocators.resize(HeapManager::max_device_ids, nullptr);
+  }
 
   HeapManager::~HeapManager()
   {
@@ -21,9 +27,14 @@ namespace jusha {
 #ifdef _DEBUG
     std::cout << "Maximal GPU usage : " << (float)maxGpuUsage/1000000 << "M bytes" << std::endl;
 #endif
+
+    for (auto i = mGpuHeapAllocators.begin(); i != mGpuHeapAllocators.end(); i++) {
+      if (*i != nullptr)
+        delete *i;
+    }
   }
 
-  void HeapManager::NeMalloc(Memory_Type type, void **addr, int size)
+  void HeapManager::NeMalloc(Memory_Type type, void **addr, const size_t &size)
   {
     if (type == CPU_HEAP)
       {
@@ -36,14 +47,21 @@ namespace jusha {
       }
     else if (type == GPU_HEAP)
       {
+        // init gpu allocator if not exist
+#ifdef USE_CUDA_ALLOCATOR
         size_t free, total;
         cudaMemGetInfo(&free, &total);
         check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
         cudaMalloc(addr, size);
         if (size && (*addr == 0))  {
-          printf("allocating memory size %d failed, total %ld, free %ld\n", size, total, free);
+          printf("allocating memory size %ld failed, total %ld, free %ld\n", size, total, free);
         }
         check_cuda_error("cudaMalloc", __FILE__, __LINE__);
+#else
+        HeapAllocator *allocator = get_gpu_allocator();
+        assert(allocator);
+        *addr = allocator->allocate(size);
+#endif
 #ifdef _DEBUG
         mGpuMemoryTracker.insert( pair<void *, int>(*addr, size));
         curGpuUsage += size;
@@ -52,6 +70,17 @@ namespace jusha {
       }
     else
       assert(0);
+  }
+
+  HeapAllocator *HeapManager::get_gpu_allocator()
+  {
+    int device(-1);
+    cudaGetDevice(&device);
+    assert(device >= 0);
+    assert(device <= HeapManager::max_device_ids);
+    if (mGpuHeapAllocators[device] == nullptr)
+      mGpuHeapAllocators[device] = new HeapAllocator();
+    return mGpuHeapAllocators[device];
   }
 
   int HeapManager::find(Memory_Type type, void *addr)
@@ -81,7 +110,7 @@ namespace jusha {
 #endif
   }
 
-  void HeapManager::NeFree(Memory_Type type, void *addr)
+  void HeapManager::NeFree(Memory_Type type, void *addr, const size_t &size)
   {
     if (type == CPU_HEAP)
       {
@@ -104,12 +133,16 @@ namespace jusha {
         mGpuMemoryTracker.erase(addr);
         curGpuUsage -= (*it).second;
 #endif
+#ifdef USE_CUDA_ALLOCATOR
         cudaFree(addr);
+#else
+        get_gpu_allocator()->deallocate(addr, size);
+#endif
       }
   }
 
 
-  void *GpuHostAllocator(int size)
+  void *GpuHostAllocator(size_t  size)
   {
     void *hostBase(0);
 
@@ -118,7 +151,7 @@ namespace jusha {
     return hostBase;
   }
 
-  void *GpuDeviceAllocator(int size)
+  void *GpuDeviceAllocator(size_t size )
   {
     void *dvceBase(0);
     gHeapManager.NeMalloc(GPU_HEAP, (void**)&dvceBase, size);
@@ -126,21 +159,21 @@ namespace jusha {
     return dvceBase;
   }
 
-  void GpuHostDeleter(void *ptr)
+  void GpuHostDeleter(void *ptr, size_t size)
   {
     //  std::cout << " releasing host " << ptr << std::endl;
-    gHeapManager.NeFree(CPU_HEAP, ptr);
+    gHeapManager.NeFree(CPU_HEAP, ptr, size);
   }
 
-  void EmptyDeviceDeleter(void *ptr)
+  void EmptyDeviceDeleter(void *ptr, size_t size)
   {
     //  std::cout << " releasing device " << ptr << std::endl;
   }
 
-  void GpuDeviceDeleter(void *ptr)
+  void GpuDeviceDeleter(void *ptr, size_t size)
   {
     //  std::cout << " releasing device " << ptr << std::endl;
-    gHeapManager.NeFree(GPU_HEAP, ptr);
+    gHeapManager.NeFree(GPU_HEAP, ptr, size);
   }
 
 }

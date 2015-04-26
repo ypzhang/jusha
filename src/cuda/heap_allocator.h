@@ -96,13 +96,15 @@ extern  size_t g_current_alloc_bsize;
   class HeapAllocator : public GpuAllocator {
 public:
     HeapAllocator();
-#ifdef DEBUG_HEAP_ALLOC
+
     ~HeapAllocator() {
+#ifdef DEBUG_HEAP_ALLOC
       float mega = (float)m_max_alloc_size/1000000.0;
       printf("HeapAllocator maximal allocated size %f\n", mega);
+#endif
   }
 
-#endif
+
 
     void *allocate(size_t bsize);
 

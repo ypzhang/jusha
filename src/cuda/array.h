@@ -48,10 +48,10 @@ namespace jusha {
 #ifdef USE_SHARED_PTR
           gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
 #else
-          gHeapManager.NeFree(GPU_HEAP, dvceBase);
+        gHeapManager.NeFree(GPU_HEAP, dvceBase, size()*sizeof(T));
 #endif
         if (hostBase)
-          gHeapManager.NeFree(CPU_HEAP, hostBase);
+          gHeapManager.NeFree(CPU_HEAP, hostBase, size()*sizeof(T));
         init_state();
       }
       // Copy Constructor
@@ -86,7 +86,7 @@ namespace jusha {
           }
 #else
         if (dvceBase)
-          gHeapManager.NeFree(GPU_HEAP, dvceBase);
+          gHeapManager.NeFree(GPU_HEAP, dvceBase, sizeof(T)*mSize);
         dvceBase = ptr;
 #endif
         isCpuValid = false;
@@ -100,7 +100,7 @@ namespace jusha {
         hostBase.reset(ptr);
 #else
         if (hostBase)
-          gHeapManager.NeFree(CPU_HEAP, hostBase);
+          gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
         hostBase = ptr;
 #endif
         isGpuValid = false;
@@ -238,11 +238,11 @@ namespace jusha {
                 assert(error == cudaSuccess);
               }
             if (hostBase)
-              gHeapManager.NeFree(CPU_HEAP, hostBase);
+              gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
             //          free(hostBase);
             if (dvceBase)
               {
-                gHeapManager.NeFree(GPU_HEAP, dvceBase);
+                gHeapManager.NeFree(GPU_HEAP, dvceBase, sizeof(T)*mSize);
                 //            cutilSafeCall(cudaFree(dvceBase));
               }
 #ifdef _DEBUG_

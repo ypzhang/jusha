@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "utility.h"
 #include "heap_allocator.h"
 
 namespace jusha {
@@ -18,6 +19,7 @@ namespace jusha {
     
     char *base = 0;
     cudaMalloc((void**)(&base), m_bytes_this_sub_bin);
+    check_cuda_error("cudaMalloc", __FILE__, __LINE__);
     if (base == 0) return false; // out of memory
 #ifdef DEBUG_HEAP_ALLOC
     g_current_alloc_bsize += m_bytes_this_sub_bin;
