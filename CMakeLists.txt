@@ -34,7 +34,7 @@ find_library (GLFW_LIB_LIBRARIES  NAMES glfw
   REQUIRED
 )
 message(STATUS "Found glfw library @ ${GLFW_LIB_LIBRARIES}")
-
+set (CUDA_PROPAGATE_HOST_FLAGS OFF)
 #########################################################
 # FIND OPENGL
 #########################################################
@@ -54,7 +54,6 @@ else ()
 
 endif(NOT OPENGL_FOUND)
 message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
-set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
 #find_package(HDF5 REQUIRED)
 #find_library (HDF5HL_LIBRARY  NAMES hdf5_hl
@@ -89,7 +88,8 @@ set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 #else ()
 #set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM20} ${GENCODE_SM30} ${GENCODE_SM35} ${GENCODE_SM50})
 #endif()
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35} ${GENCODE_SM50})
+#set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35} ${GENCODE_SM50})
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CUDA_NVCC_FLAGS "-O0" "-g")
@@ -116,6 +116,7 @@ if (APPLE)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif (UNIX)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-XCompiler, \\"-std=C++11\\"")
 endif()
 #-std=c++0x
 # Split the library in two parts, the CUDA one and the CPP one.
@@ -187,7 +188,8 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35})
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11"
+    "--relaxed-constexpr") # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
 else()
 #  cuda_add_library(jusha SHARED ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})

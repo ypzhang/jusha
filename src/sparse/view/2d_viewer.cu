@@ -1,3 +1,4 @@
+#include <cstddef>
 #include "./2d_viewer.h"
 #include "sparse/mesh.h"
 #include "./opengl_helper.h"

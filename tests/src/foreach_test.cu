@@ -12,10 +12,14 @@ __global__ void kernel(int N)
   
 }
 
-class AtomicAdd: public ForEachKernel<StridePolicy, JC_cuda_blocksize, false> 
+__device__ void atomic_run(int gid) {
+}
+
+template <class Fn>
+class AtomicAdd: public ForEachKernel<StridePolicy, /*Fn,*/ JC_cuda_blocksize, false> 
 {
 public:
-  explicit AtomicAdd(int _N): ForEachKernel<StridePolicy, JC_cuda_blocksize, false>(_N){
+  explicit AtomicAdd(Fn method, int N): ForEachKernel<StridePolicy, /*Fn,*/JC_cuda_blocksize, false>(N /*,method*/){
   }
   
   virtual __device__ void do_1
@@ -28,8 +32,12 @@ TEST_CASE( "ForEach", "[sum]" ) {
   sum.zero();
   //  ForEachKernel<StridePolicy, 256, false> fe(300);
   //  AtomicAdd kernel(300);
-  AtomicAdd kernel(3);
-  kernel.run(sum.getGpuPtr());
+  auto lambda_func = []() {};
+  AtomicAdd<decltype(atomic_run)> kernel(atomic_run, 3);
+
+  printf("running atomic add kernel\n");
+  kernel.run(2, sum.getGpuPtr(), sum.getReadOnlyPtr());
+  kernel.run(sum.getGpuPtr(), 2, sum.getReadOnlyPtr());
   //  kernel.run();
   //  generic_kernel<<<1,1>>>(sum.getGpuPtr());
   //  fe.run(sum.getGpuPtr());

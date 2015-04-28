@@ -21,8 +21,8 @@ namespace jusha {
     size_t block_size_this_bin(0);
     bool inited(false);
     bool full(false);
-    char *base(nullptr);
-    char *upper(nullptr);
+    char *base = NULL; //nullptr);
+    char *upper = NULL; //(nullptr);
     int num_total_entries(0); // must be less than MAX_ENTRIES_PER_BIN
     int num_used_entries(0); 
     int last_empty_index(0);
