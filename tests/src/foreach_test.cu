@@ -24,10 +24,20 @@ __global__ void kernel(int N)
   
 }
 
+//template <class Tuple>
+class atomic_run_nv: public nvstd::function<void(int)> {
+public:
+__device__ void operator()(int gid, std::tuple<int, int *, const int *> &tuple) const {
+    printf("first  %d.\n", std::get<0>(tuple));
+    printf("second %p.\n", std::get<1>(tuple));
+printf("insidef atomic run nv gid %d.\n", gid);
+}
+};
 
 __device__ void atomic_run(int gid) {
-  //  printf("gid %d.\n", gid);
+    printf("gid %d.\n", gid);
 }
+
 
 template <class Fn>
 class AtomicAdd: public ForEachKernel<StridePolicy, Fn, JC_cuda_blocksize, false> 
@@ -47,9 +57,9 @@ TEST_CASE( "ForEach", "[sum]" ) {
   //  ForEachKernel<StridePolicy, 256, false> fe(300);
   //  AtomicAdd kernel(300);
   AtomicAdd<decltype(atomic_run)> kernel(atomic_run, 3);
-
+//atomic_run_nv nv_run;
   printf("running atomic add kernel\n");
-  kernel.run/*<decltype(atomic_run), int, int *, const int *>*/(atomic_run, 2, sum.getGpuPtr(), sum.getReadOnlyPtr());
+  kernel.run<atomic_run_nv, int, int *, const int *>(2, sum.getGpuPtr(), sum.getReadOnlyPtr());
   
   //  kernel.run(sum.getGpuPtr(), 2, sum.getReadOnlyPtr());
   //  kernel.run();
