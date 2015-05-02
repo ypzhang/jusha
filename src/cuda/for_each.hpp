@@ -7,7 +7,6 @@
 //#include <thread>
 
 namespace jusha {
-  
 template <int groupsize>
 class ForEachPolicy {
 public:
@@ -59,11 +58,13 @@ public:
 template <template<int> class Policy, int group_size, bool need_sync>
 class ForEach {
 public:
-  __device__ ForEach(int32_t _N, int32_t my_id, int32_t max_id):
-    N(_N), m_id(my_id), m_max_id (max_id), m_group_size(group_size) {
-
+  __device__ ForEach(int32_t _N, int32_t my_id, int32_t stride):
+    N(_N), m_id(my_id), m_stride (stride), m_group_size(group_size) {
+    
     Policy<group_size> policy;
-    m_batches = policy.num_batches(N, my_id, max_id, need_sync);
+    m_batches = policy.num_batches(N, my_id, m_stride, need_sync);
+    m_is_active = (my_id < N);
+    printf("m_is active %d m_batches %d.\n", m_is_active, m_batches);
     //    int lane_id = my_id % group_size;
   }
   
@@ -81,14 +82,20 @@ public:
     return m_batches;
   }
   
-  __device__ void next_batch() const {
+  __device__ bool not_done() const {
+    return m_batches > 0;
+  }
+  __device__ void next_batch() {
+    m_batches--;
+    m_id += m_stride;
+    m_is_active = (m_id < N);
     
   }
   
 private:
   int N = 0;
   int m_id = 0;
-  int m_max_id = 0;
+  int m_stride = 0;
   int m_group_size = 0;
   int m_batches = 0;
   bool m_is_active = false;
@@ -136,45 +143,28 @@ private:
     printf("int test gid %d.\n", gid);
   }
 
-  template <class Fn, size_t tuple_size, class... Args>
+  template <class Fn/*, class Policy*/, class... Args>
   __global__ void for_each_kernel(int N, Args... args)
   {
-    ForEach<StridePolicy,  256, false> fe(N, threadIdx.x+blockDim.x*blockIdx.x, blockDim.x * gridDim.x);
+    //    Policy policy;
+    ForEach<StridePolicy, 256, false> fe(N, threadIdx.x+blockDim.x*blockIdx.x, 
+                                          blockDim.x * gridDim.x);
 
     //    printf("here my_id %d max_id %d batches %d\n", my_id, max_id, m_batches);
     std::tuple<Args...> tuple (args...);
-    //    Fn method;
-    //    std::tuple_element<0, std::tuple<Args...>> tuple_0;
-    //    std::tuple_element<4, std::tuple<Args...>> tuple_4;
-    // printf("first  %d.\n", std::get<0>(tuple));
-    // printf("second %p.\n", std::get<1>(tuple));
-    // printf("third %p.\n", std::get<2>(tuple));
-    //for_each_recursive(args...);
-    auto lambda = [](int gid) {
-      printf("gid %d.\n", gid);
-    };
-
-
-    //    nvstd::function<decltype(method)> _method; // = method;
-//    nvstd::function<void(int)> _method = method; // = method;
-//    nvstd::function<void(int)> _method = Fn(); // = method;
-
-#if 1
-    int batches = fe.num_batches();
+    //    int batches = fe.num_batches();
     //    printf("here. batches %d method %p\n", batches, _method);
     Fn _method; 
-    _method(threadIdx.x, tuple);
     //    global_for_each(threadIdx.x, tuple);
-    while (batches--) {
+    while (fe.not_done()) {
+      printf("active ? %d\n", fe.is_active());
       if (fe.is_active())
-        printf("I am here\n");
-      printf("I am here\n");
-      //      method(threadIdx.x);
-
+        {
+          printf("callign method\n");
+          _method(threadIdx.x, tuple);
+        }
       fe.next_batch();
     }
-#endif
-    //    int num_batches = fe.
   }
 
 
@@ -188,12 +178,11 @@ private:
     template <class Method, class... Args>
     void run(Args... args) {
       int blocks = GET_BLOCKS(N);
-      blocks = CAP_BLOCK_SIZE(blocks);
-      int BS = 1; //jusha::cuda::JCKonst::cuda_blocksize;
+      int BS = jusha::cuda::JCKonst::cuda_blocksize;
       printf("calling generic kernel\n");
       //      std::tuple_size<std::tuple<Args...>> tuple_size;
-    
-      for_each_kernel<Method, std::tuple_size<std::tuple<Args...>>::value, Args...><<<blocks, BS/*, tuple_size::value*/>>>(N, args...);
+      //      std::tuple_size<std::tuple<Args...>>::value, 
+      for_each_kernel<Method, /*Policy,*/ Args...><<<blocks, BS/*, tuple_size::value*/>>>(N, args...);
       //      cudaDeviceReset();
     }
 

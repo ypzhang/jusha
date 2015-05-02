@@ -8,11 +8,11 @@ using namespace jusha;
 
 template <class Tuple>
 static __device__ void global_for_each(int gid, Tuple &tuple) {
-    printf("first  %d.\n", std::get<0>(tuple));
-    printf("second %p.\n", std::get<1>(tuple));
-    printf("third %p.\n", std::get<2>(tuple));
+  //   printf("first  %d.\n", std::get<0>(tuple));
+  //   printf("second %p.\n", std::get<1>(tuple));
+  //   printf("third %p.\n", std::get<2>(tuple));
 
-  printf("gid %d.\n", gid);
+  // printf("gid %d.\n", gid);
 }
 
 #include "cuda/for_each.hpp"
