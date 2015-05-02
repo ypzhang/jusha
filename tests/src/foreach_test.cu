@@ -27,10 +27,10 @@ __global__ void kernel(int N)
 //template <class Tuple>
 class atomic_run_nv: public nvstd::function<void(int)> {
 public:
-__device__ void operator()(int gid, std::tuple<int, int *, const int *> &tuple) const {
-    printf("first  %d.\n", std::get<0>(tuple));
-    printf("second %p.\n", std::get<1>(tuple));
-printf("insidef atomic run nv gid %d.\n", gid);
+__device__ void operator()(int gid, std::tuple<int, int *> &tuple) const {
+  // printf("first  %d.\n", std::get<0>(tuple));
+  // printf("second %p.\n", std::get<1>(tuple));
+  atomicAdd(std::get<1>(tuple), std::get<0>(tuple));
 }
 };
 
@@ -40,10 +40,10 @@ __device__ void atomic_run(int gid) {
 
 
 template <class Fn>
-class AtomicAdd: public ForEachKernel<StridePolicy, Fn, JC_cuda_blocksize, false> 
+class AtomicAdd: public ForEachKernel<StridePolicy, JC_cuda_blocksize, false> 
 {
 public:
-  explicit AtomicAdd(Fn method, int N): ForEachKernel<StridePolicy, Fn, JC_cuda_blocksize, false>(N, method){
+  explicit AtomicAdd(Fn method, int N): ForEachKernel<StridePolicy, JC_cuda_blocksize, false>(N){
   }
   
   virtual __device__ void do_1
@@ -58,9 +58,14 @@ TEST_CASE( "ForEach", "[sum]" ) {
   //  AtomicAdd kernel(300);
   AtomicAdd<decltype(atomic_run)> kernel(atomic_run, 3);
 //atomic_run_nv nv_run;
-  printf("running atomic add kernel\n");
-  kernel.run<atomic_run_nv, int, int *, const int *>(2, sum.getGpuPtr(), sum.getReadOnlyPtr());
-  
+//  printf("running atomic add kernel\n");
+  kernel.run<atomic_run_nv, int, int *>(2, sum.getGpuPtr());
+  REQUIRE(sum[0] == 6);
+
+  sum.zero();
+  kernel.run<atomic_run_nv, int, int *>(12, sum.getGpuPtr());
+  REQUIRE(sum[0] == 12*3);
+
   //  kernel.run(sum.getGpuPtr(), 2, sum.getReadOnlyPtr());
   //  kernel.run();
   //  generic_kernel<<<1,1>>>(sum.getGpuPtr());
@@ -68,6 +73,7 @@ TEST_CASE( "ForEach", "[sum]" ) {
   check_cuda_error("atomic", __FILE__, __LINE__);
 }
 
+#if 0
 TEST_CASE( "ForEach2", "[wrapper]" ) {
   JVector<int> sum(1);
   sum.zero();
@@ -80,3 +86,4 @@ TEST_CASE( "ForEach2", "[wrapper]" ) {
   //  generic_kernel<<<1,1>>>(sum.getGpuPtr());
   //  fe.run(sum.getGpuPtr());
 }
+#endif

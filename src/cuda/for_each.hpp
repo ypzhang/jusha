@@ -17,19 +17,19 @@ public:
   virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const = 0;
 };
 
-template <int groupsize>
+  template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/>
 class StridePolicy: public ForEachPolicy<groupsize> {
 public:
   virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const {
     if (!need_sync) {
-      return _N/max_id + (_N%max_id)<my_id? 1:0 ;
+      return _N/max_id + my_id < (_N%max_id)? 1:0 ;
     } else {
       return (_N+max_id-1)/max_id;
     }
   }
 };
 
-template <int groupsize>
+  template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/>
 class BlockPolicy: public ForEachPolicy<groupsize> {
 public:
   virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const {
@@ -64,7 +64,6 @@ public:
     Policy<group_size> policy;
     m_batches = policy.num_batches(N, my_id, m_stride, need_sync);
     m_is_active = (my_id < N);
-    printf("m_is active %d m_batches %d.\n", m_is_active, m_batches);
     //    int lane_id = my_id % group_size;
   }
   
@@ -157,10 +156,8 @@ private:
     Fn _method; 
     //    global_for_each(threadIdx.x, tuple);
     while (fe.not_done()) {
-      printf("active ? %d\n", fe.is_active());
       if (fe.is_active())
         {
-          printf("callign method\n");
           _method(threadIdx.x, tuple);
         }
       fe.next_batch();
@@ -168,10 +165,10 @@ private:
   }
 
 
-  template <template<int> class Policy, class Fn, int group_size, bool need_sync>
+  template <template<int> class Policy, int group_size, bool need_sync>
   class ForEachKernel {
   public: 
-    explicit ForEachKernel(int32_t _N, Fn method): N(_N) {
+    explicit ForEachKernel(int32_t _N): N(_N) {
       //      m_method = method;
     }
 
@@ -179,11 +176,7 @@ private:
     void run(Args... args) {
       int blocks = GET_BLOCKS(N);
       int BS = jusha::cuda::JCKonst::cuda_blocksize;
-      printf("calling generic kernel\n");
-      //      std::tuple_size<std::tuple<Args...>> tuple_size;
-      //      std::tuple_size<std::tuple<Args...>>::value, 
       for_each_kernel<Method, /*Policy,*/ Args...><<<blocks, BS/*, tuple_size::value*/>>>(N, args...);
-      //      cudaDeviceReset();
     }
 
     virtual __device__ void do_1() {}
