@@ -47,6 +47,7 @@ public:
   }
 };
 
+#if 0
 TEST_CASE( "ForEach", "[sum]" ) {
   JVector<int> sum(1);
   sum.zero();
@@ -72,6 +73,7 @@ TEST_CASE( "ForEach", "[sum]" ) {
   //  fe.run(sum.getGpuPtr());
   check_cuda_error("atomic", __FILE__, __LINE__);
 }
+#endif
 
 #if 0
 TEST_CASE( "ForEach2", "[wrapper]" ) {

@@ -9,6 +9,10 @@
 namespace jusha {
 template <int groupsize>
 class ForEachPolicy {
+// #ifndef __forceinline__ 
+// #define __forceinline__ 
+//#endif
+
 public:
   virtual __device__ void group_sync() {}
   __device__ int group_size() {
@@ -18,15 +22,23 @@ public:
 };
 
   template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/>
-class StridePolicy: public ForEachPolicy<groupsize> {
+  class StridePolicy { // : public ForEachPolicy<groupsize> {
 public:
-  virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const {
+  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &need_sync, int &n_batches) const {
     if (!need_sync) {
-      return _N/max_id + my_id < (_N%max_id)? 1:0 ;
+      n_batches = (_N/max_id);
+      n_batches += my_id < (_N - n_batches * max_id)? 1:0 ;
     } else {
-      return (_N+max_id-1)/max_id;
+      n_batches = (_N+max_id-1)/max_id;
     }
   }
+
+    __device__  __forceinline__ void next_batch(int &batches, int &my_id, const int &stride, const int &N) {
+     --batches;
+     my_id += stride;
+    //    is_active = (my_id < N);
+   }
+    //    __device__ 
 };
 
   template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/>
@@ -59,88 +71,55 @@ template <template<int> class Policy, int group_size, bool need_sync>
 class ForEach {
 public:
   __device__ ForEach(int32_t _N, int32_t my_id, int32_t stride):
-    N(_N), m_id(my_id), m_stride (stride), m_group_size(group_size) {
+    N(_N), m_id(my_id), m_stride (stride), m_group_size(group_size){
     
-    Policy<group_size> policy;
-    m_batches = policy.num_batches(N, my_id, m_stride, need_sync);
-    m_is_active = (my_id < N);
+    //    Policy<group_size> policy;
+    policy.init(N, my_id, m_stride, need_sync, m_batches);
+
     //    int lane_id = my_id % group_size;
   }
-  
-  __device__ bool is_active() const {
-    return m_is_active;
-  }
 
-  __device__ void execute_wrapper()
-  {
-    
-  }
-
-  __device__ int num_batches() const {
+  __device__ __forceinline__ int num_batches() const {
     //    Policy<group_size
     return m_batches;
   }
   
-  __device__ bool not_done() const {
+  __device__ __forceinline__ bool not_done() const {
     return m_batches > 0;
   }
-  __device__ void next_batch() {
-    m_batches--;
-    m_id += m_stride;
-    m_is_active = (m_id < N);
-    
+
+  __device__ __forceinline__ bool not_last_batch() const {
+    return m_batches > 1;
   }
+
+  __device__ __forceinline__ bool is_active() {
+    return (m_id < N);
+  }
+
+  __device__ __forceinline__ int get_id() const {
+    return m_id;
+  }
+
+  __device__ __forceinline__  void next_batch() {
+    policy.next_batch(m_batches, m_id, m_stride, N);
+    //    Policy<group_size> policy;
+    //   --m_batches;
+    // m_id += m_stride;
+    // m_is_active = (m_id < N);
+
+  //    policy.next_batch(m_batches, m_id, m_stride, m_is_active, N);
+   }
   
 private:
+  Policy<group_size> policy;
   int N = 0;
   int m_id = 0;
   int m_stride = 0;
   int m_group_size = 0;
   int m_batches = 0;
-  bool m_is_active = false;
+  //  bool m_is_active = false;
 };
 
-
-  class Each {
-  public:
-    __host__ __device__ Each(int _N):N(_N){}
-  private:
-    int N;
-  };
-
-  // __global__ void dummy_kernel() {
-  //   printf("in dummy kernel");
-  // }
-
-  // __global__ void wrapper_kernel(Each foreach) {
-  //   dummy_kernel<<<1, 20>>>();
-  // }
-  
-  // class KernelWrapper {
-  // public:
-  //   void run(int N) {
-  //     Each each(N);
-  //     wrapper_kernel<<<1,1>>>(each);
-  //   }
-    
-  // };
-
-  // template <typename T>
-  // __device__ void for_each_recursive(T value)
-  // {
-  //   printf("inside value for_each last\n");
-  // }
-
-  // template <typename T, class... Args>
-  // __device__ void for_each_recursive(T value, Args... args)
-  // {
-  //   printf("inside value for_each\n");
-  //   for_each_recursive(args...);
-  // }
-
-  // __device__ void test(int gid) {
-  //   printf("int test gid %d.\n", gid);
-  // }
 
   template <class Fn/*, class Policy*/, class... Args>
   static __global__ void for_each_kernel(int N, Args... args)
@@ -151,14 +130,25 @@ private:
 
     //    printf("here my_id %d max_id %d batches %d\n", my_id, max_id, m_batches);
     std::tuple<Args...> tuple (args...);
-    //    int batches = fe.num_batches();
-    //    printf("here. batches %d method %p\n", batches, _method);
+      int batches = fe.num_batches();
+
     Fn _method; 
     //    global_for_each(threadIdx.x, tuple);
+
+
+    while (fe.not_last_batch()) {
+      //      if (fe.is_active())
+        {
+          _method(fe.get_id(), tuple);
+        }
+      fe.next_batch();
+    }
     while (fe.not_done()) {
+
       if (fe.is_active())
         {
-          _method(threadIdx.x, tuple);
+          //          if (blockIdx.x == 0 && threadIdx.x == 1)
+          _method(fe.get_id(), tuple);
         }
       fe.next_batch();
     }
@@ -179,15 +169,9 @@ private:
       for_each_kernel<Method, Args...><<<blocks, BS>>>(N, args...);
     }
       
-    template <class Method, class... Args>
-    void run1(Args... args) {
-      int blocks = GET_BLOCKS(N);
-      int BS = jusha::cuda::JCKonst::cuda_blocksize;
-      for_each_kernel<Method, Args...><<<blocks, BS>>>(N, args...);
+    void set_N(int32_t _N) {
+      N = _N;
     }
-      void set_N(int32_t _N) {
-        N = _N;
-      }
   private:
     int N{0};
     //    Fn m_method;

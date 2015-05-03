@@ -92,13 +92,13 @@ set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} )
 
 #
-#if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 #  set(CUDA_NVCC_FLAGS "-O0" "-g")
 #  add_definitions("-DDEBUG")	
-#  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
-#else()
-#  set(CUDA_NVCC_FLAGS "-O3")
-#endif()
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
+else()
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -O3")
+endif()
 
 
 # Make the gampack headers visible without extra paths.
@@ -189,7 +189,7 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr"
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr" "--resource-usage"
 	RELEASE --use_fast_math;-g;-O3;-DNDEBUG
 	DEBUG -g;-O0;-DDEBUG
     ) # "-Xcompiler ,\"-std=c++11\"")

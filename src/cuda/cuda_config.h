@@ -7,8 +7,8 @@ namespace jusha {
      */
     #define JC_cuda_warpsize_shift  5
     #define JC_cuda_warpsize_mask   0x1F
-    #define JC_cuda_blocksize       256
-    #define JC_cuda_blocksize_shift 8
+    #define JC_cuda_blocksize       512
+    #define JC_cuda_blocksize_shift 9
     #define JC_cuda_bs_mask         0xFF
     #define JC_cuda_bs_mask2        0xFFFFFF00
     #define JC_cuda_max_blocks      64
