@@ -39,16 +39,12 @@ __device__ void atomic_run(int gid) {
 }
 
 
-template <class Fn>
+//template <class Fn>
 class AtomicAdd: public ForEachKernel<StridePolicy, JC_cuda_blocksize, false> 
 {
 public:
-  explicit AtomicAdd(Fn method, int N): ForEachKernel<StridePolicy, JC_cuda_blocksize, false>(N){
+  explicit AtomicAdd(int N): ForEachKernel<StridePolicy, JC_cuda_blocksize, false>(N){
   }
-  
-  virtual __device__ void do_1
-() {}  
-
 };
 
 TEST_CASE( "ForEach", "[sum]" ) {
@@ -56,15 +52,19 @@ TEST_CASE( "ForEach", "[sum]" ) {
   sum.zero();
   //  ForEachKernel<StridePolicy, 256, false> fe(300);
   //  AtomicAdd kernel(300);
-  AtomicAdd<decltype(atomic_run)> kernel(atomic_run, 3);
+  int n1 = 3;
+  int add_per_thread = 2;
+  //  AtomicAdd/*<decltype(atomic_run)>*/ kernel(/*atomic_run,*/ n1);
+  ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(n1);
 //atomic_run_nv nv_run;
 //  printf("running atomic add kernel\n");
-  kernel.run<atomic_run_nv, int, int *>(2, sum.getGpuPtr());
-  REQUIRE(sum[0] == 6);
+  kernel.run<atomic_run_nv, int, int *>(add_per_thread, sum.getGpuPtr());
+  int sum_now = sum[0];
+  REQUIRE(sum_now == n1*add_per_thread);
 
-  sum.zero();
+  kernel.set_N(257);
   kernel.run<atomic_run_nv, int, int *>(12, sum.getGpuPtr());
-  REQUIRE(sum[0] == 12*3);
+  REQUIRE(sum[0] == (sum_now + 257*12));
 
   //  kernel.run(sum.getGpuPtr(), 2, sum.getReadOnlyPtr());
   //  kernel.run();

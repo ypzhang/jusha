@@ -3,6 +3,7 @@
 #include "catch.hpp"
 #include "cuda/array.h"
 #include "cuda/primitive.h"
+#include "cuda/array_util.h"
 
 TEST_CASE( "Simple", "[Array]" ) {
   int test_size = 1 << 23;
@@ -32,9 +33,35 @@ TEST_CASE( "VecMultiply", "[simple]" ) {
 
   for (int i = 0; i != test_size; i++)
     REQUIRE(v0v1[i] == (i*i));
-
-  
+ 
 }
 
+
+TEST_CASE( "VecAdd", "[array]" ) {
+  int test_size = 20;
+  JVector<int> v0(test_size), v1(test_size);
+  v0.sequence(0);
+  v1.sequence(0);
+  JVector<int> v0v1(test_size);
+  //  v0v1.zero();
+  jusha::plus(v0, v1, v0v1);
+
+  for (int i = 0; i != test_size; i++)
+    REQUIRE(v0v1[i] == (i*2));
+}
+
+
+TEST_CASE( "VecMinus", "[array]" ) {
+  int test_size = 20;
+  JVector<int> v0(test_size), v1(test_size);
+  v0.sequence(0);
+  v1.sequence(0);
+  JVector<int> v0v1(test_size);
+  //  v0v1.zero();
+  jusha::minus(v0, v1, v0v1);
+
+  for (int i = 0; i != test_size; i++)
+    REQUIRE(v0v1[i] == 0);
+}
 
 

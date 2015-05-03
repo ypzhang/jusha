@@ -41,15 +41,15 @@ public:
     int batch_start = batch_per_group * group_id;
     int batch_end = batch_start + batch_per_group;
     batch_end = batch_end > total_batches? batch_end : total_batches;
-    int num_batches = batch_end - batch_start;
+    int num_batch = batch_end - batch_start;
     if (!need_sync)
-      return num_batches;
+      return num_batch;
 
     //    if (batch_end == total_batches)
     {
       int elem_in_last_batch = _N - batch_end * groupsize;
       int id_in_group = my_id % groupsize;
-      return num_batches - (id_in_group > elem_in_last_batch? 1:0);
+      return num_batch - (id_in_group > elem_in_last_batch? 1:0);
     }
     
   }
@@ -108,42 +108,42 @@ private:
     int N;
   };
 
-  __global__ void dummy_kernel() {
-    printf("in dummy kernel");
-  }
+  // __global__ void dummy_kernel() {
+  //   printf("in dummy kernel");
+  // }
 
-  __global__ void wrapper_kernel(Each foreach) {
-    dummy_kernel<<<1, 20>>>();
-  }
+  // __global__ void wrapper_kernel(Each foreach) {
+  //   dummy_kernel<<<1, 20>>>();
+  // }
   
-  class KernelWrapper {
-  public:
-    void run(int N) {
-      Each each(N);
-      wrapper_kernel<<<1,1>>>(each);
-    }
+  // class KernelWrapper {
+  // public:
+  //   void run(int N) {
+  //     Each each(N);
+  //     wrapper_kernel<<<1,1>>>(each);
+  //   }
     
-  };
+  // };
 
-  template <typename T>
-  __device__ void for_each_recursive(T value)
-  {
-    printf("inside value for_each last\n");
-  }
+  // template <typename T>
+  // __device__ void for_each_recursive(T value)
+  // {
+  //   printf("inside value for_each last\n");
+  // }
 
-  template <typename T, class... Args>
-  __device__ void for_each_recursive(T value, Args... args)
-  {
-    printf("inside value for_each\n");
-    for_each_recursive(args...);
-  }
+  // template <typename T, class... Args>
+  // __device__ void for_each_recursive(T value, Args... args)
+  // {
+  //   printf("inside value for_each\n");
+  //   for_each_recursive(args...);
+  // }
 
-  __device__ void test(int gid) {
-    printf("int test gid %d.\n", gid);
-  }
+  // __device__ void test(int gid) {
+  //   printf("int test gid %d.\n", gid);
+  // }
 
   template <class Fn/*, class Policy*/, class... Args>
-  __global__ void for_each_kernel(int N, Args... args)
+  static __global__ void for_each_kernel(int N, Args... args)
   {
     //    Policy policy;
     ForEach<StridePolicy, 256, false> fe(N, threadIdx.x+blockDim.x*blockIdx.x, 
@@ -176,10 +176,18 @@ private:
     void run(Args... args) {
       int blocks = GET_BLOCKS(N);
       int BS = jusha::cuda::JCKonst::cuda_blocksize;
-      for_each_kernel<Method, /*Policy,*/ Args...><<<blocks, BS/*, tuple_size::value*/>>>(N, args...);
+      for_each_kernel<Method, Args...><<<blocks, BS>>>(N, args...);
     }
-
-    virtual __device__ void do_1() {}
+      
+    template <class Method, class... Args>
+    void run1(Args... args) {
+      int blocks = GET_BLOCKS(N);
+      int BS = jusha::cuda::JCKonst::cuda_blocksize;
+      for_each_kernel<Method, Args...><<<blocks, BS>>>(N, args...);
+    }
+      void set_N(int32_t _N) {
+        N = _N;
+      }
   private:
     int N{0};
     //    Fn m_method;
