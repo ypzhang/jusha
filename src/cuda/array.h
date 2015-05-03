@@ -235,7 +235,7 @@ namespace jusha {
               {
                 cudaError_t error = cudaMemcpy(newDvceBase, dvceBase, mSize*sizeof(T), cudaMemcpyDeviceToDevice);
                 //            std::cout << "memcpy d2d size:" << mSize*sizeof(T)  << std::endl;
-                assert(error == cudaSuccess);
+                jassert(error == cudaSuccess);
               }
             if (hostBase)
               gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
@@ -611,7 +611,7 @@ namespace jusha {
             //            cudaError_t error = cudaMemcpy(dvcebase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
             cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
             //        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
-            assert(error == cudaSuccess);
+            jassert(error == cudaSuccess);
           }
       }
 
@@ -621,8 +621,8 @@ namespace jusha {
           {
             //            check_cuda_error("before memcpy", __FILE__, __LINE__);
             if (size()) {
-              assert(dvceBase);
-              assert(hostBase);
+              jassert(dvceBase);
+              jassert(hostBase);
             }
 #ifdef _DEBUG_
             std::cout << "sync mirror array from device 0x" << std::hex << dvceBase << " to host 0x" << hostBase << " size(" << mSize << "); \n";
@@ -634,9 +634,7 @@ namespace jusha {
             //            cudaError_t error = cudaMemcpy(hostBase, dvcebase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
             if (mSize){
               cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
-              //              printf("dvcebase %p to host %p size %zd\n", dvceBase, hostBase, mSize);
-            //        std::cout << "memcpy d2h size:" << mSize*sizeof(T)  << std::endl;
-              assert(error == cudaSuccess);
+              jassert(error == cudaSuccess);
             }
           }
       }

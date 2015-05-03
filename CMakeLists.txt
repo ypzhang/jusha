@@ -29,7 +29,7 @@ endif (APPLE)
 #    message(ERROR " GLUT not found!")
 #endif(NOT GLUT_FOUND)
 
-find_library (GLFW_LIB_LIBRARIES  NAMES glfw
+find_library (GLFW_LIB_LIBRARIES  NAMES glfw glfw3
   PATHS /opt/local/lib /usr/local /usr/local/lib
   REQUIRED
 )
@@ -91,13 +91,14 @@ set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 #set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${GENCODE_SM35} ${GENCODE_SM50})
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CUDA_NVCC_FLAGS "-O0" "-g")
-  add_definitions("-DDEBUG")	
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
-else()
-  set(CUDA_NVCC_FLAGS "-O3")
-endif()
+#
+#if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#  set(CUDA_NVCC_FLAGS "-O0" "-g")
+#  add_definitions("-DDEBUG")	
+#  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
+#else()
+#  set(CUDA_NVCC_FLAGS "-O3")
+#endif()
 
 
 # Make the gampack headers visible without extra paths.
@@ -188,8 +189,10 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11"
-    "--relaxed-constexpr") # "-Xcompiler ,\"-std=c++11\"")
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr"
+	RELEASE --use_fast_math;-g;-O3;-DNDEBUG
+	DEBUG -g;-O0;-DDEBUG
+    ) # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
 else()
 #  cuda_add_library(jusha SHARED ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})

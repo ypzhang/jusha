@@ -146,8 +146,7 @@ namespace jusha {
     int index=0;
     
     for (int row=0; row<m_num_rows; row++) {
-      int nc = (int)elements[row].size();
-      assert (nc > 0);
+      assert((int)elements[row].size() > 0);
 
       // Make sure diagonal element is first
       if (elements[row].find(row) != elements[row].end()) {
