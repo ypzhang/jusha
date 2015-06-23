@@ -1,8 +1,15 @@
 #pragma once
+
+#ifdef __GNUG__
+#include <cxxabi.h>
+#endif
+#include <sstream>
 #include <cassert>
 #include <tuple>
 #include <cstdio>
+#include <typeinfo>
 #include <nvfunctional>
+#include "kernel.hpp"
 #include "cuda/cuda_config.h"
 //#include <thread>
 
@@ -21,11 +28,11 @@ public:
   virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const = 0;
 };
 
-  template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/>
+  template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/, bool need_sync>
   class StridePolicy { // : public ForEachPolicy<groupsize> {
 public:
-  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &need_sync, int &n_batches) const {
-    if (!need_sync) {
+  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) const {
+    if (!_need_sync) {
       n_batches = (_N/max_id);
       n_batches += my_id < (_N - n_batches * max_id)? 1:0 ;
     } else {
@@ -41,10 +48,10 @@ public:
     //    __device__ 
 };
 
-  template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/>
+  template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/, bool need_sync>
 class BlockPolicy: public ForEachPolicy<groupsize> {
 public:
-  virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const {
+  virtual __device__ int num_batches(int _N, int my_id, int max_id, bool _need_sync) const {
     assert((max_id % groupsize) == 0);
     int num_groups = max_id /groupsize;
     int group_id = my_id/groupsize;
@@ -54,7 +61,7 @@ public:
     int batch_end = batch_start + batch_per_group;
     batch_end = batch_end > total_batches? batch_end : total_batches;
     int num_batch = batch_end - batch_start;
-    if (!need_sync)
+    if (!_need_sync)
       return num_batch;
 
     //    if (batch_end == total_batches)
@@ -67,14 +74,14 @@ public:
   }
 };
 
-template <template<int> class Policy, int group_size, bool need_sync>
+  template <template<int, bool> class Policy, int group_size, bool need_sync>
 class ForEach {
 public:
   __device__ ForEach(int32_t _N, int32_t my_id, int32_t stride):
-    N(_N), m_id(my_id), m_stride (stride), m_group_size(group_size){
+    m_id(my_id){
     
     //    Policy<group_size> policy;
-    policy.init(N, my_id, m_stride, need_sync, m_batches);
+    policy.init(_N, my_id, stride, need_sync, m_batches);
 
     //    int lane_id = my_id % group_size;
   }
@@ -92,7 +99,7 @@ public:
     return m_batches > 1;
   }
 
-  __device__ __forceinline__ bool is_active() {
+  __device__ __forceinline__ bool is_active(int N) {
     return (m_id < N);
   }
 
@@ -100,8 +107,8 @@ public:
     return m_id;
   }
 
-  __device__ __forceinline__  void next_batch() {
-    policy.next_batch(m_batches, m_id, m_stride, N);
+  __device__ __forceinline__  void next_batch(int N, int stride) {
+    policy.next_batch(m_batches, m_id, stride, N);
     //    Policy<group_size> policy;
     //   --m_batches;
     // m_id += m_stride;
@@ -111,22 +118,20 @@ public:
    }
   
 private:
-  Policy<group_size> policy;
-  int N = 0;
+  Policy<group_size, need_sync> policy;
   int m_id = 0;
-  int m_stride = 0;
-  int m_group_size = 0;
+  //  int m_group_size = 0;
   int m_batches = 0;
   //  bool m_is_active = false;
 };
 
-
-  template <class Fn/*, class Policy*/, class... Args>
+  template <template <int, bool> class Policy, class Fn/*, class Policy*/, class... Args>
   static __global__ void for_each_kernel(int N, Args... args)
   {
     //    Policy policy;
-    ForEach<StridePolicy, 256, false> fe(N, threadIdx.x+blockDim.x*blockIdx.x, 
-                                          blockDim.x * gridDim.x);
+    int stride = blockDim.x * gridDim.x;
+    int id = threadIdx.x+blockDim.x*blockIdx.x; 
+    ForEach<Policy, 256, false> fe(N, id, stride);
 
     //    printf("here my_id %d max_id %d batches %d\n", my_id, max_id, m_batches);
     std::tuple<Args...> tuple (args...);
@@ -137,36 +142,48 @@ private:
 
 
     while (fe.not_last_batch()) {
-      //      if (fe.is_active())
         {
           _method(fe.get_id(), tuple);
         }
-      fe.next_batch();
+        fe.next_batch(N, stride);
     }
     while (fe.not_done()) {
 
-      if (fe.is_active())
+      if (fe.is_active(N))
         {
           //          if (blockIdx.x == 0 && threadIdx.x == 1)
           _method(fe.get_id(), tuple);
         }
-      fe.next_batch();
+      fe.next_batch(N, stride);
     }
   }
 
 
-  template <template<int> class Policy, int group_size, bool need_sync>
-  class ForEachKernel {
+  template <template<int, bool> class Policy, int group_size, bool need_sync>
+  class ForEachKernel: public CudaKernel {
   public: 
     explicit ForEachKernel(int32_t _N): N(_N) {
       //      m_method = method;
+      std::stringstream tag_stream ;
+#ifdef __GNUG__
+      int status;
+      char * demangled = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+      //      m_tag = std::string(demangled);
+      tag_stream << demangled;
+      free(demangled);
+#else
+      tag_stream <<       typeid(this).name();
+#endif
+      tag_stream << ":Dim_" << _N;
+      set_tag(tag_stream.str());
     }
 
     template <class Method, class... Args>
     void run(Args... args) {
+      printf ("running kernel %s.\n", get_tag().c_str());
       int blocks = GET_BLOCKS(N);
       int BS = jusha::cuda::JCKonst::cuda_blocksize;
-      for_each_kernel<Method, Args...><<<blocks, BS>>>(N, args...);
+      for_each_kernel<Policy, Method, Args...><<<blocks, BS>>>(N, args...);
     }
       
     void set_N(int32_t _N) {

@@ -47,19 +47,28 @@ int test_size = 256 * 20000 +124;
   JVector<int> v0v1(test_size);
   //  v0v1.zero();
   jusha::plus(v0, v1, v0v1);
+  cudaDeviceSynchronize();
+  double start = jusha::jusha_get_wtime();
   jusha::plus(v0, v1, v0v1);
   jusha::plus(v0, v1, v0v1);
   jusha::plus(v0, v1, v0v1);
-
+  cudaDeviceSynchronize();
+  double end = jusha::jusha_get_wtime();
+  printf("jusha  plus took %f seconds\n", end-start);
   // for (int i = 0; i != test_size; i++)
   //   REQUIRE(v0v1[i] == (i*2));
   jusha::plus_thrust(v0, v1, v0v1);
+  cudaDeviceSynchronize();
+  start = jusha::jusha_get_wtime();
   jusha::plus_thrust(v0, v1, v0v1);
   jusha::plus_thrust(v0, v1, v0v1);
   jusha::plus_thrust(v0, v1, v0v1);
+  cudaDeviceSynchronize();
+  end = jusha::jusha_get_wtime();
+  printf("thrust plus took %f seconds\n", end-start);
   // for (int i = 0; i != test_size; i++)
   //   REQUIRE(v0v1[i] == (i*2));
-jusha::cuda_event_print() ;
+  // jusha::cuda_event_print() ;
 }
 
 

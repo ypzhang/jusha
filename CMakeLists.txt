@@ -127,6 +127,7 @@ set(CPP_SRC_LIST
     src/cuda/cuda_config.cpp
     src/cuda/heap_manager.cpp
     src/cuda/heap_allocator.cpp
+    src/cuda/kernel.cpp
 
     src/sparse/solver/diag_precond.cpp
     src/sparse/solver/jacobi_precond.cpp    
@@ -166,6 +167,8 @@ set(HEADERS_LIST
     src/cuda/array.h
     src/cuda/array_util.h
     src/cuda/allocator.h
+	src/cuda/for_each.hpp
+	src/cuda/kernel.hpp
 
     src/sparse/matrix.h
 	src/sparse/distri_obj.h    
@@ -182,14 +185,13 @@ set(HEADERS_LIST
 	src/sparse/view/opengl_helper.h
 )
 
-
 # Must set this because size_t etc is shared between NVCC and Host - only really matters on Windows
 set(CUDA_64_BIT_DEVICE_CODE ON)
 
 if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr" "--resource-usage"
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr" "--resource-usage" "-v"
 	RELEASE --use_fast_math;-g;-O3;-DNDEBUG
 	DEBUG -g;-O0;-DDEBUG
     ) # "-Xcompiler ,\"-std=c++11\"")
