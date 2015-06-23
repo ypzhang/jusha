@@ -13,7 +13,7 @@ namespace jusha {
           if (cuRandgen == 0)
             {
               curandStatus_t status = curandCreateGenerator(&cuRandgen,  rng_type);
-              assert(status == CURAND_STATUS_SUCCESS);
+              jassert(status == CURAND_STATUS_SUCCESS);
             }
           return cuRandgen;
         }
@@ -34,14 +34,14 @@ namespace jusha {
         if (cuRandgen == 0)
           {
             curandStatus_t status = curandCreateGenerator(&cuRandgen,  rng_type);
-            assert(status == CURAND_STATUS_SUCCESS);
+            jassert(status == CURAND_STATUS_SUCCESS);
           }
         return cuRandgen;
       }
       void apply(unsigned int *buffer, size_t num)
       {
         curandStatus_t status = curandGenerate(getGen(), buffer, num);
-        assert(status == CURAND_STATUS_SUCCESS);
+        jassert(status == CURAND_STATUS_SUCCESS);
       }
     };
 

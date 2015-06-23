@@ -201,8 +201,10 @@ else()
   cuda_add_library(jusha STATIC ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
 endif()
 
-if (UNIX)
-target_link_libraries(jusha /usr/local/cuda-7.0/lib64/libcudadevrt.a)
+if (APPLE)
+target_link_libraries(jusha /usr/local/cuda/lib/libcudadevrt.a)
+elseif (UNIX)
+target_link_libraries(jusha /usr/local/cuda/lib64/libcudadevrt.a)
 endif()
 
 target_link_libraries(jusha ${CUDA_curand_LIBRARY})

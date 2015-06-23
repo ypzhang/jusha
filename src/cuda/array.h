@@ -319,14 +319,14 @@ namespace jusha {
         //        cudaError_t error = cudaMemcpy(&ele, dvcebase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         cudaError_t error = cudaMemcpy(&ele, dvceBase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         //    std::cout << "memcpy d2h size:" << sizeof(T)  << std::endl;
-        assert(error == cudaSuccess);
+        jassert(error == cudaSuccess);
         return ele;
       }
 
       void setElementAt(T &value, const int index)
       {
-        assert(index < mSize);
-        assert(isCpuValid || isGpuValid);
+        jassert(index < mSize);
+        jassert(isCpuValid || isGpuValid);
         if (isCpuValid)
           //          hostBase[index] = value;
           hostBase[index] = value;
@@ -334,7 +334,7 @@ namespace jusha {
           {
             //            cudaError_t error = cudaMemcpy(dvcebase+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
             cudaError_t error = cudaMemcpy(dvceBase+index, &value, sizeof(T), cudaMemcpyHostToDevice); 
-            assert(error == cudaSuccess);
+            jassert(error == cudaSuccess);
           }
       }
 
