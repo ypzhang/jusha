@@ -188,7 +188,7 @@ set(HEADERS_LIST
 # Must set this because size_t etc is shared between NVCC and Host - only really matters on Windows
 set(CUDA_64_BIT_DEVICE_CODE ON)
 
-if(UNIX)
+#if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
 	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr" "--resource-usage" "-v"
@@ -196,10 +196,10 @@ if(UNIX)
 	DEBUG -g;-O0;-DDEBUG
     ) # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
-else()
+#else()
 #  cuda_add_library(jusha SHARED ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
-  cuda_add_library(jusha STATIC ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
-endif()
+#  cuda_add_library(jusha STATIC ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
+#endif()
 
 if (APPLE)
 target_link_libraries(jusha /usr/local/cuda/lib/libcudadevrt.a)

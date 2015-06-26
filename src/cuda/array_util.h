@@ -8,8 +8,8 @@ namespace jusha {
   template <class T>
     class plus_run_nv: public nvstd::function<void(T)> {
     public:
-      __device__ void operator()(int gid, std::tuple<const T*, const T*, T *> &tuple) const {
-        std::get<2>(tuple)[gid] = std::get<0>(tuple)[gid] + std::get<1>(tuple)[gid];
+      __device__ void operator()(int gid, thrust::tuple<const T*, const T*, T *> &tuple) const {
+        thrust::get<2>(tuple)[gid] = thrust::get<0>(tuple)[gid] + thrust::get<1>(tuple)[gid];
         //        if (blockIdx.x == 0 && threadIdx.x == 1)
         //        printf("writing result %d block id %d tid %d.\n", std::get<2>(tuple)[gid], blockIdx.x, threadIdx.x);
       }
@@ -18,8 +18,8 @@ namespace jusha {
   template <class T>
     class minus_run_nv: public nvstd::function<void(T)> {
     public:
-      __device__ void operator()(int gid, std::tuple<const T*, const T*, T *> &tuple) const {
-        std::get<2>(tuple)[gid] = std::get<0>(tuple)[gid] - std::get<1>(tuple)[gid];
+      __device__ void operator()(int gid, thrust::tuple<const T*, const T*, T *> &tuple) const {
+        thrust::get<2>(tuple)[gid] = thrust::get<0>(tuple)[gid] - thrust::get<1>(tuple)[gid];
       }
     };
 

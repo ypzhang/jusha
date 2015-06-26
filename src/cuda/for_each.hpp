@@ -1,11 +1,11 @@
 #pragma once
 
-#ifdef __GNUG__
+//#ifdef __GNUG__
 #include <cxxabi.h>
-#endif
+//#endif
 #include <sstream>
 #include <cassert>
-#include <tuple>
+#include <thrust/tuple.h>
 #include <cstdio>
 #include <typeinfo>
 #include <nvfunctional>
@@ -134,7 +134,7 @@ private:
     ForEach<Policy, 256, false> fe(N, id, stride);
 
     //    printf("here my_id %d max_id %d batches %d\n", my_id, max_id, m_batches);
-    std::tuple<Args...> tuple (args...);
+    thrust::tuple<Args...> tuple (args...);
       int batches = fe.num_batches();
 
     Fn _method; 
