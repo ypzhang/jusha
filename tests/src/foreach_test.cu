@@ -25,6 +25,7 @@ __global__ void kernel(int N)
 }
 
 //template <class Tuple>
+#if 0
 class atomic_run_nv: public nvstd::function<void(int)> {
 public:
 __device__ void operator()(int gid, std::tuple<int, int *> &tuple) const {
@@ -37,6 +38,17 @@ __device__ void operator()(int gid, std::tuple<int, int *> &tuple) const {
 __device__ void atomic_run(int gid) {
     printf("gid %d.\n", gid);
 }
+#endif
+
+template <class T>
+class atomic_run_nv: public nvstd::function<void(T)> {
+public:
+  __device__ void operator()(int gid, thrust::tuple<T*, T> &tuple) const {
+    atomicAdd(thrust::get<0>(tuple), thrust::get<1>(tuple));
+  }
+};
+
+
 
 
 //template <class Fn>
@@ -47,8 +59,8 @@ public:
   }
 };
 
-#if 0
-TEST_CASE( "ForEach", "[sum]" ) {
+#if 1
+TEST_CASE( "ForEachStride", "[sum]" ) {
   JVector<int> sum(1);
   sum.zero();
   //  ForEachKernel<StridePolicy, 256, false> fe(300);
@@ -59,12 +71,40 @@ TEST_CASE( "ForEach", "[sum]" ) {
   ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(n1);
 //atomic_run_nv nv_run;
 //  printf("running atomic add kernel\n");
-  kernel.run<atomic_run_nv, int, int *>(add_per_thread, sum.getGpuPtr());
+  kernel.run<atomic_run_nv<int>, int *, int>(sum.getGpuPtr(), add_per_thread);
   int sum_now = sum[0];
   REQUIRE(sum_now == n1*add_per_thread);
 
   kernel.set_N(257);
-  kernel.run<atomic_run_nv, int, int *>(12, sum.getGpuPtr());
+  kernel.run<atomic_run_nv<int>, int *, int >(sum.getGpuPtr(), 12);
+  REQUIRE(sum[0] == (sum_now + 257*12));
+
+  //  kernel.run(sum.getGpuPtr(), 2, sum.getReadOnlyPtr());
+  //  kernel.run();
+  //  generic_kernel<<<1,1>>>(sum.getGpuPtr());
+  //  fe.run(sum.getGpuPtr());
+  check_cuda_error("atomic", __FILE__, __LINE__);
+}
+#endif
+
+#if 0
+TEST_CASE( "ForEachBlock", "[sum]" ) {
+  JVector<int> sum(1);
+  sum.zero();
+  //  ForEachKernel<StridePolicy, 256, false> fe(300);
+  //  AtomicAdd kernel(300);
+  int n1 = 3;
+  int add_per_thread = 2;
+  //  AtomicAdd/*<decltype(atomic_run)>*/ kernel(/*atomic_run,*/ n1);
+  ForEachKernel<BlockPolicy, JC_cuda_blocksize, false> kernel(n1);
+//atomic_run_nv nv_run;
+//  printf("running atomic add kernel\n");
+  kernel.run<atomic_run_nv<int>, int *, int>(sum.getGpuPtr(), add_per_thread);
+  int sum_now = sum[0];
+  REQUIRE(sum_now == n1*add_per_thread);
+
+  kernel.set_N(257);
+  kernel.run<atomic_run_nv<int>, int *, int >(sum.getGpuPtr(), 12);
   REQUIRE(sum[0] == (sum_now + 257*12));
 
   //  kernel.run(sum.getGpuPtr(), 2, sum.getReadOnlyPtr());
@@ -89,3 +129,5 @@ TEST_CASE( "ForEach2", "[wrapper]" ) {
   //  fe.run(sum.getGpuPtr());
 }
 #endif
+
+

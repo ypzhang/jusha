@@ -14,7 +14,7 @@
 //#include <thread>
 
 namespace jusha {
-template <int groupsize>
+  //template <int groupsize>
 class ForEachPolicy {
 // #ifndef __forceinline__ 
 // #define __forceinline__ 
@@ -22,16 +22,16 @@ class ForEachPolicy {
 
 public:
   virtual __device__ void group_sync() {}
-  __device__ int group_size() {
-    return groupsize;
-  }
+  // __device__ int group_size() {
+  //   return groupsize;
+  // }
   virtual __device__ int num_batches(int _N, int my_id, int max_id, bool need_sync) const = 0;
 };
 
   template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/, bool need_sync>
   class StridePolicy { // : public ForEachPolicy<groupsize> {
 public:
-  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) const {
+    __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) const {
     if (!_need_sync) {
       n_batches = (_N/max_id);
       n_batches += my_id < (_N - n_batches * max_id)? 1:0 ;
@@ -39,18 +39,28 @@ public:
       n_batches = (_N+max_id-1)/max_id;
     }
   }
-
-    __device__  __forceinline__ void next_batch(int &batches, int &my_id, const int &stride, const int &N) {
+    __device__ int stride() const {
+      return blockDim.x * gridDim.x;
+    }
+    __device__  __forceinline__ void next_batch(int &batches, int &my_id) {
      --batches;
-     my_id += stride;
+     my_id += stride();
     //    is_active = (my_id < N);
    }
     //    __device__ 
 };
 
   template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/, bool need_sync>
-class BlockPolicy: public ForEachPolicy<groupsize> {
+  class BlockPolicy { // :public ForEachPolicy{
 public:
+  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) const {
+    n_batches = num_batches(_N, my_id, max_id, _need_sync);
+  }
+
+    __device__ int stride() const {
+      return groupsize;
+    }
+
   virtual __device__ int num_batches(int _N, int my_id, int max_id, bool _need_sync) const {
     assert((max_id % groupsize) == 0);
     int num_groups = max_id /groupsize;
@@ -72,16 +82,23 @@ public:
     }
     
   }
+
+  __device__  __forceinline__ void next_batch(int &batches, int &my_id) {
+    --batches;
+    my_id += stride();
+    //    is_active = (my_id < N);
+    }
+
 };
 
   template <template<int, bool> class Policy, int group_size, bool need_sync>
 class ForEach {
 public:
-  __device__ ForEach(int32_t _N, int32_t my_id, int32_t stride):
+  __device__ ForEach(int32_t _N, int32_t my_id, int32_t max_id):
     m_id(my_id){
     
     //    Policy<group_size> policy;
-    policy.init(_N, my_id, stride, need_sync, m_batches);
+    policy.init(_N, my_id, max_id, need_sync, m_batches);
 
     //    int lane_id = my_id % group_size;
   }
@@ -107,8 +124,11 @@ public:
     return m_id;
   }
 
-  __device__ __forceinline__  void next_batch(int N, int stride) {
-    policy.next_batch(m_batches, m_id, stride, N);
+    __device__ __forceinline__ int get_stride() const {
+      return policy.stride();
+    }
+  __device__ __forceinline__  void next_batch() {
+    policy.next_batch(m_batches, m_id);
     //    Policy<group_size> policy;
     //   --m_batches;
     // m_id += m_stride;
@@ -129,9 +149,11 @@ private:
   static __global__ void for_each_kernel(int N, Args... args)
   {
     //    Policy policy;
-    int stride = blockDim.x * gridDim.x;
+    //    int stride = blockDim.x * gridDim.x;
+    int max_id = blockDim.x * gridDim.x;
     int id = threadIdx.x+blockDim.x*blockIdx.x; 
-    ForEach<Policy, 256, false> fe(N, id, stride);
+    ForEach<Policy, 256, false> fe(N, id, max_id);
+    int stride = fe.get_stride();
 
     //    printf("here my_id %d max_id %d batches %d\n", my_id, max_id, m_batches);
     thrust::tuple<Args...> tuple (args...);
@@ -145,16 +167,16 @@ private:
         {
           _method(fe.get_id(), tuple);
         }
-        fe.next_batch(N, stride);
+        fe.next_batch();
     }
-    while (fe.not_done()) {
 
+    while (fe.not_done()) {
       if (fe.is_active(N))
         {
           //          if (blockIdx.x == 0 && threadIdx.x == 1)
           _method(fe.get_id(), tuple);
         }
-      fe.next_batch(N, stride);
+      fe.next_batch();
     }
   }
 
