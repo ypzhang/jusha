@@ -26,7 +26,7 @@ namespace jusha {
       // wish had a "reduce" iterator for the output
       
       int N = lhs_last - lhs_first;
-      int blocks = GET_BLOCKS(N);
+      int blocks = GET_BLOCKS(N, jusha::cuda::JCKonst::cuda_blocksize);
 
       if (blocks > 0)
         raise_non_equal_flag<<<blocks, JCKonst::cuda_blocksize, 0, stream>>>(lhs_first.get(), rhs_first.get(), equal.data().get(), N);

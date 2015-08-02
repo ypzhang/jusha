@@ -34,7 +34,7 @@ namespace jusha {
 
 
 #define CAP_BLOCK_SIZE(block) (block > jusha::cuda::JCKonst::cuda_max_blocks ? jusha::cuda::JCKonst::cuda_max_blocks:block)
-#define GET_BLOCKS(N) CAP_BLOCK_SIZE( (N + jusha::cuda::JCKonst::cuda_blocksize -1 )/jusha::cuda::JCKonst::cuda_blocksize)
+#define GET_BLOCKS(N, bs) CAP_BLOCK_SIZE( (N + bs -1 )/bs)
 #define JCUDA_BS (jusha::cuda::JCKonst::cuda_blocksize)
 
 // used in kernels 

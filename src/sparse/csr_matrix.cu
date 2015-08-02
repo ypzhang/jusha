@@ -32,7 +32,7 @@ __global__ void split_diag_coefs_kernel(const int32_t *row_ptrs, const int64_t *
 template<typename T>
 void split_diag_coefs(const int64_t &num_rows, const int32_t *row_ptrs, const int64_t *cols, const T* coefs, T *diag, T *offd)
 {
-   int blocks = GET_BLOCKS(num_rows);
+  int blocks = GET_BLOCKS(num_rows, jusha::cuda::JCKonst::cuda_blocksize);
    blocks = CAP_BLOCK_SIZE(blocks);
    if (blocks > 0)
       split_diag_coefs_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(row_ptrs, cols, coefs, diag, offd, num_rows);
@@ -80,7 +80,7 @@ __global__ void make_diag_first_kernel(const int32_t * __restrict__ row_ptrs, in
 template <class T>
 void make_diag_first(const int64_t &num_rows, const int32_t *row_ptrs, int64_t *cols, T *coefs)
 {
-   int blocks = GET_BLOCKS(num_rows);
+  int blocks = GET_BLOCKS(num_rows, jusha::cuda::JCKonst::cuda_blocksize);
    blocks = CAP_BLOCK_SIZE(blocks);
    if (blocks > 0)
       make_diag_first_kernel<<<blocks, jusha::cuda::JCKonst::cuda_blocksize>>>(row_ptrs, cols, coefs, num_rows);
@@ -161,7 +161,7 @@ csr_row_to_coo_row_kernel(const int32_t * __restrict__ csr_rows, int32_t * __res
     
     assert(csr_rows.size() == (nrows+1));
     coo_rows.resize(nnzs);
-    int blocks = GET_BLOCKS(nrows);
+    int blocks = GET_BLOCKS(nrows, JCUDA_BS);
     blocks = CAP_BLOCK_SIZE(blocks);
     if (blocks > 0)
       csr_row_to_coo_row_kernel<<<blocks, JCUDA_BS>>>(csr_rows.getReadOnlyGpuPtr(),
@@ -203,7 +203,7 @@ void jacobi_smooth(const CsrMatrix<T> &matrix, const JVector<T> &x, const JVecto
   const JVector<int> &rowptrs = matrix.get_csr_rows();
   const JVector<int64_t> &cols  = matrix.get_cols();
   int64_t nrows = matrix.get_num_rows();
-  int blocks = GET_BLOCKS(nrows);
+  int blocks = GET_BLOCKS(nrows, JCUDA_BS);
   blocks = CAP_BLOCK_SIZE(blocks);
   if (blocks > 0) 
     jacobi_smooth_kernel<<<blocks, JCUDA_BS>>>(rowptrs.getReadOnlyGpuPtr(),

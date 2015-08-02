@@ -31,6 +31,7 @@ namespace jusha {
       assert(lhs.size() == rhs.size());
       assert(result.size() == rhs.size());
       ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(lhs.size());
+      kernel.set_auto_tuning();
       kernel.run<plus_run_nv<T>, const T*, const T*, T*>(lhs.getReadOnlyGpuPtr(), rhs.getReadOnlyGpuPtr(), result.getGpuPtr());
       jusha::cuda_event_stop("foreach_plus");
     }
@@ -52,6 +53,7 @@ namespace jusha {
       assert(lhs.size() == rhs.size());
       assert(result.size() == rhs.size());
       ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(lhs.size());
+      kernel.set_auto_tuning();
       kernel.run<minus_run_nv<T>, const T*, const T*, T*>(lhs.getReadOnlyGpuPtr(), rhs.getReadOnlyGpuPtr(), result.getGpuPtr());
     }
 

@@ -10,7 +10,6 @@
 #include <typeinfo>
 #include <nvfunctional>
 #include "kernel.hpp"
-#include "cuda/cuda_config.h"
 //#include <thread>
 
 namespace jusha {
@@ -31,7 +30,7 @@ public:
   template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/, bool need_sync>
   class StridePolicy { // : public ForEachPolicy<groupsize> {
 public:
-    __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) const {
+    __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) {
     if (!_need_sync) {
       n_batches = (_N/max_id);
       n_batches += my_id < (_N - n_batches * max_id)? 1:0 ;
@@ -39,7 +38,7 @@ public:
       n_batches = (_N+max_id-1)/max_id;
     }
   }
-    __device__ int stride() const {
+    __device__ __forceinline__ int stride() const {
       return blockDim.x * gridDim.x;
     }
     __device__  __forceinline__ void next_batch(int &batches, int &my_id) {
@@ -47,13 +46,16 @@ public:
      my_id += stride();
     //    is_active = (my_id < N);
    }
+    __device__ __forceinline__ bool is_active(const int &my_id, const int &N)  {
+      return my_id < N;
+    }
     //    __device__ 
 };
 
   template <int groupsize/* = jusha::cuda::JC_cuda_blocksize*/, bool need_sync>
   class BlockPolicy { // :public ForEachPolicy{
 public:
-  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) const {
+  __device__ void init(const int & _N, const int &my_id, const int &max_id, const bool &_need_sync, int &n_batches) {
     n_batches = num_batches(_N, my_id, max_id, _need_sync);
   }
 
@@ -61,7 +63,7 @@ public:
       return groupsize;
     }
 
-  virtual __device__ int num_batches(int _N, int my_id, int max_id, bool _need_sync) const {
+  virtual __device__ int num_batches(int _N, int my_id, int max_id, bool _need_sync) {
     assert((max_id % groupsize) == 0);
     int num_groups = max_id /groupsize;
     int group_id = my_id/groupsize;
@@ -71,6 +73,13 @@ public:
     int batch_end = batch_start + batch_per_group;
     batch_end = batch_end > total_batches? batch_end : total_batches;
     int num_batch = batch_end - batch_start;
+
+    if (batch_end == total_batches) {
+      m_last_index = _N;
+    } else {
+      m_last_index = batch_end * groupsize;
+    }
+
     if (!_need_sync)
       return num_batch;
 
@@ -87,7 +96,14 @@ public:
     --batches;
     my_id += stride();
     //    is_active = (my_id < N);
+  }
+
+    __device__  __forceinline__ bool is_active(const int &id, const int &N) {
+      return id < m_last_index;
     }
+
+  private: 
+    int m_last_index;
 
 };
 
@@ -103,7 +119,7 @@ public:
     //    int lane_id = my_id % group_size;
   }
 
-  __device__ __forceinline__ int num_batches() const {
+  __device__ __forceinline__ int num_batches() {
     //    Policy<group_size
     return m_batches;
   }
@@ -117,7 +133,7 @@ public:
   }
 
   __device__ __forceinline__ bool is_active(int N) {
-    return (m_id < N);
+    return policy.is_active(m_id, N);
   }
 
   __device__ __forceinline__ int get_id() const {
@@ -203,8 +219,16 @@ private:
     template <class Method, class... Args>
     void run(Args... args) {
       printf ("running kernel %s.\n", get_tag().c_str());
-      int blocks = GET_BLOCKS(N);
-      int BS = jusha::cuda::JCKonst::cuda_blocksize;
+      int blocks = GET_BLOCKS(N, m_block_size);
+      int BS = m_block_size; //jusha::cuda::JCKonst::cuda_blocksize;
+      if (m_auto_tuning) {
+        //must be equal to or above cuda 6.5 
+        int gridsize, blocksize;
+        cudaOccupancyMaxPotentialBlockSize(&gridsize, &blocksize, for_each_kernel<Policy, Method, Args...>);
+        printf("auto tuning kernel %s to use block size %d grid size %d, originally set to %d and %d.\n",
+               get_tag().c_str(), gridsize, blocksize, blocks, BS);
+        blocks = gridsize; BS = blocksize;
+      }
       for_each_kernel<Policy, Method, Args...><<<blocks, BS>>>(N, args...);
     }
       

@@ -87,7 +87,7 @@ TEST_CASE( "ForEachStride", "[sum]" ) {
 }
 #endif
 
-#if 0
+#if 1
 TEST_CASE( "ForEachBlock", "[sum]" ) {
   JVector<int> sum(1);
   sum.zero();
