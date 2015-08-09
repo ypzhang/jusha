@@ -11,7 +11,7 @@ namespace jusha {
     #define JC_cuda_blocksize_shift 9
     #define JC_cuda_bs_mask         0xFF
     #define JC_cuda_bs_mask2        0xFFFFFF00
-    #define JC_cuda_max_blocks      64
+    #define JC_cuda_max_blocks      120
     #define JC_cuda_warpsize        32
 
     class JCKonst {

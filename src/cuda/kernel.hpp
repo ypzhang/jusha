@@ -8,7 +8,7 @@ namespace jusha {
  */
 class CudaKernel {
   public: 
-  CudaKernel() : m_tag(std::string("UnknownName:UnknownDim")) {}
+  CudaKernel() {}
   std::string get_tag() const { return m_tag; }
   void set_tag(std::string str) { m_tag = str; }
 
@@ -20,10 +20,14 @@ class CudaKernel {
     m_auto_tuning = true;
   }
 
+  void disable_auto_tuning() {
+    m_auto_tuning = false;
+  }
+
 protected:
   std::string m_tag;
   int m_block_size = jusha::cuda::JCKonst::cuda_blocksize;
-  bool m_auto_tuning = false;
+  bool m_auto_tuning = true;
 };
  
 

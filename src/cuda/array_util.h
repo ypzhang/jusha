@@ -30,10 +30,20 @@ namespace jusha {
       jusha::cuda_event_start("foreach_plus");
       assert(lhs.size() == rhs.size());
       assert(result.size() == rhs.size());
-      ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(lhs.size());
-      kernel.set_auto_tuning();
+      ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(lhs.size(), "ArrayPlus");
       kernel.run<plus_run_nv<T>, const T*, const T*, T*>(lhs.getReadOnlyGpuPtr(), rhs.getReadOnlyGpuPtr(), result.getGpuPtr());
       jusha::cuda_event_stop("foreach_plus");
+    }
+
+    template <class T>
+    void plus_block(const JVector<T> &lhs, const JVector<T> &rhs, JVector<T> &result)
+    {
+      jusha::cuda_event_start("foreach_plus_block");
+      assert(lhs.size() == rhs.size());
+      assert(result.size() == rhs.size());
+      ForEachKernel<BlockPolicy, JC_cuda_warpsize, false> kernel(lhs.size(), "ArrayPlusBlock");
+      kernel.run<plus_run_nv<T>, const T*, const T*, T*>(lhs.getReadOnlyGpuPtr(), rhs.getReadOnlyGpuPtr(), result.getGpuPtr());
+      jusha::cuda_event_stop("foreach_plus_block");
     }
 
 
@@ -52,8 +62,7 @@ namespace jusha {
     {
       assert(lhs.size() == rhs.size());
       assert(result.size() == rhs.size());
-      ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(lhs.size());
-      kernel.set_auto_tuning();
+      ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(lhs.size(), "ArrayMinus");
       kernel.run<minus_run_nv<T>, const T*, const T*, T*>(lhs.getReadOnlyGpuPtr(), rhs.getReadOnlyGpuPtr(), result.getGpuPtr());
     }
 
