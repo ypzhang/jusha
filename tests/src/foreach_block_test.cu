@@ -11,9 +11,8 @@ template <class T>
 class atomic_run_nv_block: public nvstd::function<void(T)> {
 public:
   __device__ void operator()(int gid, thrust::tuple<T*, T> &tuple) const {
-    if (gid == 32)
-      printf("here gid %d threadIdx.x %d, blockIdx.x %d.\n", gid, threadIdx.x, blockIdx.x);
-    
+    // if (gid == 32)
+    //   printf("here gid %d threadIdx.x %d, blockIdx.x %d.\n", gid, threadIdx.x, blockIdx.x);
     atomicAdd(thrust::get<0>(tuple) + gid, thrust::get<1>(tuple));
   }
 };
@@ -24,7 +23,9 @@ TEST_CASE( "ForEachBlock", "[sum]" ) {
   int  n1 = 5120129;//1200000;
   JVector<int> sum(n1), sum_ref(n1);
   sum.zero();
-  sum_ref.fill(1);
+  for (int i = 0; i != n1; i++)
+    sum_ref[i] = 2;
+
   //  ForEachKernel<StridePolicy, 256, false> fe(300);
   //  AtomicAdd kernel(300);
 
