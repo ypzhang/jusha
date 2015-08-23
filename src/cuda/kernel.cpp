@@ -1,4 +1,4 @@
-#include "kernel.hpp"
+//#include "kernel.hpp"
 
 namespace jusha {
 #define MAX_DEVICE_ID 64

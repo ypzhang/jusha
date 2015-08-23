@@ -44,9 +44,6 @@ template <class T>
 class atomic_run_nv: public nvstd::function<void(T)> {
 public:
   __device__ void operator()(int gid, thrust::tuple<T*, T> &tuple) const {
-    if (gid >= 5120124)
-      printf("here.\n");
-    
     atomicAdd(thrust::get<0>(tuple), thrust::get<1>(tuple));
   }
 };

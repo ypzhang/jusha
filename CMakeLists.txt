@@ -169,6 +169,7 @@ set(HEADERS_LIST
     src/cuda/allocator.h
 	src/cuda/for_each.hpp
 	src/cuda/kernel.hpp
+	src/cuda/policy.hpp
 
     src/sparse/matrix.h
 	src/sparse/distri_obj.h    
@@ -192,8 +193,8 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
 	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} "-std=c++11" "--relaxed-constexpr" "--resource-usage" "-v"
-	RELEASE --use_fast_math;-g;-O3;-DNDEBUG
-	DEBUG -g;-O0;-DDEBUG
+	RELEASE --use_fast_math;-g;-O3;-DNDEBUG;${GENCODE_SM50};${GENCODE_SM35}
+	DEBUG -g;-O0;-DDEBUG;${GENCODE_SM50};${GENCODE_SM35}
     ) # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
 #else()

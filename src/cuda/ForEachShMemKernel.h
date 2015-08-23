@@ -1,28 +1,10 @@
 #pragma once
 
-//#ifdef __GNUG__
-//#endif
-#include <cassert>
-#include <thrust/tuple.h>
-#include <cstdio>
-#include <typeinfo>
-#include <nvfunctional>
-#include "kernel.hpp"
-#include "policy.hpp"
-//#include <thread>
-
 namespace jusha {
-  //template <int groupsize>
-
-  /*!
-   * The for_each kernel template for simple kernels that do not use shared memory
-   * 
-   */
-  template <template <int, bool> class Policy, int groupsize, int need_sync, class Fn/*, class Policy*/, class... Args>
-  static __global__ void for_each_kernel(int N, Args... args)
+  template <template <int, bool> class Policy, int groupsize, int need_sync, class Fn, class Shared_T, int SharedSize, class... Args>
+  static __global__ void for_each_shm_kernel(int N, Args... args)
   {
-    //    Policy policy;
-    //    int stride = blockDim.x * gridDim.x;
+    Shared_T sh_item[SharedSize];
     int max_id = blockDim.x * gridDim.x;
     int id = threadIdx.x+blockDim.x*blockIdx.x; 
     ForEach<Policy, groupsize, need_sync> fe(N, id, max_id);
@@ -30,7 +12,7 @@ namespace jusha {
 
     //    printf("here my_id %d max_id %d batches %d\n", my_id, max_id, m_batches);
     thrust::tuple<Args...> tuple (args...);
-      int batches = fe.num_batches();
+    int batches = fe.num_batches();
 
     Fn _method; 
     //    global_for_each(threadIdx.x, tuple);
@@ -54,25 +36,24 @@ namespace jusha {
 
 
   /*!
-   * A template for each kernel class that does not use shared memorya
-   */ 
-  template <template<int, bool> class Policy, int group_size, bool need_sync>
-  class ForEachKernel: public CudaKernel {
+   * A template kernel class that uses shared memory
+   */
+  template <template<int, bool> class Policy, int group_size, bool need_sync, class Shared_T>
+  class ForEachShMemKernel: public CudaKernel {
   public: 
-    explicit ForEachKernel(int32_t _N, const std::string &tag): m_N(_N), CudaKernel(_N, tag) {
+    explicit ForEachShMemKernel(int32_t _N, const std::string &tag): m_N(_N), CudaKernel(_N, tag) {
     }
 
-    template <class Method, class... Args>
+    template <class Method, class Shared_T, class SharedSize, class... Args>
     void run(Args... args) {
       int blocks = GET_BLOCKS(m_N, m_block_size);
       int BS = m_block_size; //jusha::cuda::JCKonst::cuda_blocksize;
+#if 0
       if (m_auto_tuning) {
         //must be equal to or above cuda 6.5 
         int min_gridsize, blocksize;
-        cudaOccupancyMaxPotentialBlockSize(&min_gridsize, &blocksize, for_each_kernel<Policy, group_size, need_sync, Method, Args...>,
+        cudaOccupancyMaxPotentialBlockSize(&min_gridsize, &blocksize, for_each_shm_kernel<Policy, group_size, need_sync, Method, Args...>,
                                            0, m_N);
-        //        gridsize = GET_BLOCKS(m_N, blocksize);
-        //        gridsize = 120;
         BS = blocksize;
         blocks = GET_BLOCKS(m_N, blocksize);
         blocks = std::min(blocks, 8 * min_gridsize);
@@ -81,8 +62,8 @@ namespace jusha {
 
       }
       printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
-      blocks = std::min(blocks, m_max_blocks);
-      for_each_kernel<Policy, group_size, need_sync, Method, Args...><<<blocks, BS>>>(m_N, args...);
+#endif
+      for_each_shm_kernel<Policy, group_size, need_sync, Method, Shared_T, Args...><<<blocks, BS>>>(m_N, args...);
     }
       
     void set_N(int32_t _N) {
@@ -92,4 +73,6 @@ namespace jusha {
     int m_N{0};
     //    Fn m_method;
   };
+}
+
 }

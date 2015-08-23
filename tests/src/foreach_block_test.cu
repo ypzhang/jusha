@@ -5,6 +5,7 @@
 #include "cuda/array.h"
 
 #include "cuda/for_each.hpp"
+
 using namespace jusha;
 
 template <class T>
@@ -24,7 +25,7 @@ TEST_CASE( "ForEachBlock", "[sum]" ) {
   JVector<int> sum(n1), sum_ref(n1);
   sum.zero();
   for (int i = 0; i != n1; i++)
-    sum_ref[i] = 2;
+    sum_ref[i] = 1;
 
   //  ForEachKernel<StridePolicy, 256, false> fe(300);
   //  AtomicAdd kernel(300);
@@ -33,7 +34,7 @@ TEST_CASE( "ForEachBlock", "[sum]" ) {
   //  AtomicAdd/*<decltype(atomic_run)>*/ kernel(/*atomic_run,*/ n1);
   ForEachKernel<BlockPolicy, JC_cuda_warpsize, false> kernel(n1, "AtomicBlockUt");
   kernel.disable_auto_tuning();
-  int sum_now = 0;
+  //  int sum_now = 0;
 //atomic_run_n nv_run;
 //  printf("running atomic add kernel\n");
 #if 0
