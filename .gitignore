@@ -35,4 +35,6 @@
 *.pdf
 *.toc
 
+.*
+
 TAGS

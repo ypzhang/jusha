@@ -2,7 +2,7 @@
 #include <cxxabi.h>
 #include <sstream>
 #include <string>
-#include "cuda/cuda_config.h"
+#include "./cuda_config.h"
 
 
 namespace jusha {
