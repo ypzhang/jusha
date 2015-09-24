@@ -12,6 +12,7 @@ namespace jusha {
   {
     //    thrust::transform(x0.gbegin(), x0.gend(), x1.gbegin(), y.gbegin(), [](double v1, double v2)->double { return v1 * v2; });
     thrust::transform(x0.gbegin(), x0.gend(), x1.gbegin(), y.gbegin(), thrust::multiplies<T>());
+    check_cuda_error("array multiply", __FILE__, __LINE__);
   }
 
   // Instantiation

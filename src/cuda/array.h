@@ -267,6 +267,7 @@ namespace jusha {
       {
         enableGpuWrite();
         cudaMemset((void *)dvceBase, 0, sizeof(T)*mSize);
+	check_cuda_error("after cudaMemset", __FILE__, __LINE__);
       }
 
 
