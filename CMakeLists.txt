@@ -169,6 +169,7 @@ set(HEADERS_LIST
     src/cuda/allocator.h
 	src/cuda/for_each.hpp
 	src/cuda/kernel.hpp
+	src/cuda/intrinsic.hpp
 	src/cuda/policy.hpp
 
     src/sparse/matrix.h
@@ -234,4 +235,6 @@ set (CPACK_SOURCE_TZ "OFF")
 # set (CPACK_PROJECT_CONFIG_FILE "${PROJECT_BINARY_DIR}/CPackOptions.cmake")
 
 INSTALL(TARGETS jusha jusha  RUNTIME DESTINATION bin  LIBRARY DESTINATION lib  ARCHIVE DESTINATION lib)
+INSTALL(DIRECTORY src/ DESTINATION include/jusha FILES_MATCHING PATTERN "*.h")
+INSTALL(DIRECTORY src/ DESTINATION include/jusha FILES_MATCHING PATTERN "*.hpp")
 include (CPack)

@@ -28,7 +28,7 @@ namespace jusha {
       class MirroredArray{
     public:
       explicit MirroredArray(int size = 0):
-      mSize(size),
+	mSize(size),
         mCapacity(size),
         hostBase(),
         dvceBase(),
@@ -36,14 +36,15 @@ namespace jusha {
         isGpuValid(false),
         gpuAllocated(false),
         cpuAllocated(false)
-          {
-          }
+      {
+      }
       
       ~MirroredArray() {
         destroy();
       }
-
+      
       void destroy() {
+	if (mCapacity < 0) return;
         if (dvceBase)
 #ifdef USE_SHARED_PTR
           gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
@@ -56,11 +57,11 @@ namespace jusha {
       }
       // Copy Constructor
       MirroredArray(const MirroredArray<T> &rhs) 
-        {
-          init_state();
-          //          printf("in copy constructore %d %d %d %d.\n", isGpuValid, gpuAllocated, isCpuValid, cpuAllocated);          
-          deep_copy(rhs);
-        }
+      {
+	init_state();
+	//          printf("in copy constructore %d %d %d %d.\n", isGpuValid, gpuAllocated, isCpuValid, cpuAllocated);          
+	deep_copy(rhs);
+      }
       
       /* Init from raw pointers
        */
@@ -132,6 +133,7 @@ namespace jusha {
               memcpy(getPtr(), src.getReadOnlyPtr(), sizeof(T)*mSize);
           }
       }
+
       
       // deep copy to
       void clone(MirroredArray<T> &dst) const
@@ -152,6 +154,11 @@ namespace jusha {
         dst.cpuAllocated = cpuAllocated;
       }
 
+      void alias(const MirroredArray<T> & dst) {
+	shallow_copy(dst);
+	mCapacity = -1; // to disable calling free
+      }
+      
       void clear()
       {
         resize(0);
@@ -175,25 +182,25 @@ namespace jusha {
         return mSize;
       }
 
-      void resize(int64_t size) 
+      void resize(int64_t _size) 
       {
 #ifdef _DEBUG_
-        std::cout << "new size " << size << " old size " << mSize << std::endl;
+        std::cout << "new size " << _size << " old size " << mSize << std::endl;
 #endif
-        if (size <= mCapacity)
+        if (_size <= mCapacity)
           {
             // free memory 
-            if (size == 0 && mSize > 0) {
+            if (_size == 0 && mSize > 0) {
               destroy();
             }
-            mSize = size;
+            mSize = _size;
           }
         else // need to reallocate
           {
 #if USE_SHARED_PTR 
             if (gpuAllocated)
               {
-                std::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(size*sizeof(T)), GpuDeviceDeleter);
+                std::shared_ptr<T> newDvceBase((T*)GpuDeviceAllocator(_size*sizeof(T)), GpuDeviceDeleter);
                 if (isGpuValid)
                   {
                     cudaError_t error = cudaMemcpy(newDvcebase, dvcebase, mSize*sizeof(T), cudaMemcpyDeviceToDevice);
@@ -204,34 +211,34 @@ namespace jusha {
               }
             if (cpuAllocated)
               {
-                std::shared_ptr<T> newHostBase((T*)GpuHostAllocator(size*sizeof(T)), GpuHostDeleter);
+                std::shared_ptr<T> newHostBase((T*)GpuHostAllocator(_size*sizeof(T)), GpuHostDeleter);
                 if (isCpuValid)
                   memcpy(newHostBase, hostBase, mSize*sizeof(T));
                 hostBase = newHostBase;            
               }
-            mSize = size;
-            mCapacity = size;
+            mSize = _size;
+            mCapacity = _size;
 #else
             T *newDvceBase(0);
             T *newHostBase(0);
             if (gpuAllocated)
               {
-                // cutilSafeCall(cudaMalloc((void**) &newDvceBase, size * sizeof(T)));
-                gHeapManager.NeMalloc(GPU_HEAP, (void**)&newDvceBase, size * sizeof(T));
+                // cutilSafeCall(cudaMalloc((void**) &newDvceBase, size * _sizeof(T)));
+                gHeapManager.NeMalloc(GPU_HEAP, (void**)&newDvceBase, _size * sizeof(T));
                 assert(newDvceBase);
                 // TODO memcpy 
               }
             if (cpuAllocated)
               {
-                gHeapManager.NeMalloc(CPU_HEAP, (void**)&newHostBase, size*sizeof(T));
+                gHeapManager.NeMalloc(CPU_HEAP, (void**)&newHostBase, _size*sizeof(T));
                 //            newHostBase = (T*)malloc(size * sizeof(T));
                 assert(newHostBase);
               }
-            if (isCpuValid)
+            if (isCpuValid && cpuAllocated)
               {
                 memcpy(newHostBase, hostBase, mSize*sizeof(T));
               }
-            if (isGpuValid)
+            if (isGpuValid && gpuAllocated)
               {
                 cudaError_t error = cudaMemcpy(newDvceBase, dvceBase, mSize*sizeof(T), cudaMemcpyDeviceToDevice);
                 //            std::cout << "memcpy d2d size:" << mSize*sizeof(T)  << std::endl;
@@ -250,8 +257,8 @@ namespace jusha {
 #endif
             hostBase = newHostBase;
             dvceBase = newDvceBase;
-            mSize = size;
-            mCapacity = size;
+            mSize = _size;
+            mCapacity = _size;
 #endif
           }
       }
@@ -563,9 +570,9 @@ namespace jusha {
 
       inline void enableGpuRead() const
       {
+	allocateGpuIfNecessary();
         if (!isGpuValid)
           {
-            allocateGpuIfNecessary();
             fromHostToDvceIfNecessary();
             isGpuValid = true;
           }
@@ -574,16 +581,19 @@ namespace jusha {
       inline void enableGpuWrite() const
       {
         allocateGpuIfNecessary();
-        fromHostToDvceIfNecessary();
-        isCpuValid = false;
-        isGpuValid = true;
+        if (!isGpuValid)
+          {
+            fromHostToDvceIfNecessary();
+            isCpuValid = false;
+            isGpuValid = true;
+          }
       }
 
       inline void enableCpuRead() const
       {
+	allocateCpuIfNecessary();
         if (!isCpuValid)
           {
-            allocateCpuIfNecessary();
             fromDvceToHostIfNecessary();
             isCpuValid = true;
           }
@@ -592,9 +602,12 @@ namespace jusha {
       inline void enableCpuWrite() const
       {
         allocateCpuIfNecessary();
-        fromDvceToHostIfNecessary();
-        isCpuValid = true;
-        isGpuValid = false;
+        if (!isCpuValid)
+          {
+            fromDvceToHostIfNecessary();
+            isCpuValid = true;
+            isGpuValid = false;
+          }
       }
   
       inline void fromHostToDvceIfNecessary() const
@@ -649,7 +662,7 @@ namespace jusha {
       mutable bool gpuAllocated;
       mutable bool cpuAllocated;
 
-      void copy(const MirroredArray<T> &rhs)
+      void shallow_copy(const MirroredArray<T> &rhs)
       {
         mSize = rhs.mSize;
         mCapacity = rhs.mCapacity;

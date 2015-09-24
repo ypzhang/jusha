@@ -76,11 +76,11 @@ namespace jusha {
         BS = blocksize;
         blocks = GET_BLOCKS(m_N, blocksize);
         blocks = std::min(blocks, 8 * min_gridsize);
-        printf("auto tuning kernel %s to use block size %d grid size %d, min_gridsize %d\n",
-               get_tag().c_str(), blocks, blocksize, min_gridsize);
+        // printf("auto tuning kernel %s to use block size %d grid size %d, min_gridsize %d\n",
+        //        get_tag().c_str(), blocks, blocksize, min_gridsize);
 
       }
-      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
+      //      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
       blocks = std::min(blocks, m_max_blocks);
       for_each_kernel<Policy, group_size, need_sync, Method, Args...><<<blocks, BS>>>(m_N, args...);
     }
