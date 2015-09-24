@@ -310,6 +310,7 @@ namespace jusha {
       const T getElementAt(const int index) const
       {
         assert(index < mSize);
+        printf("cpu valid %d gpu valid %d.\n", isCpuValid, isGpuValid);
         assert(isCpuValid || isGpuValid);
         if (isCpuValid)
           //          return hostBase[index];
@@ -317,6 +318,7 @@ namespace jusha {
         T ele; 
         allocateCpuIfNecessary();
         //        cudaError_t error = cudaMemcpy(&ele, dvcebase+index, sizeof(T),cudaMemcpyDeviceToHost); 
+        printf("calling cudamemcpy \n");
         cudaError_t error = cudaMemcpy(&ele, dvceBase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         //    std::cout << "memcpy d2h size:" << sizeof(T)  << std::endl;
         jassert(error == cudaSuccess);
@@ -571,13 +573,10 @@ namespace jusha {
 
       inline void enableGpuWrite() const
       {
-        if (!isGpuValid)
-          {
-            allocateGpuIfNecessary();
-            fromHostToDvceIfNecessary();
-            isCpuValid = false;
-            isGpuValid = true;
-          }
+        allocateGpuIfNecessary();
+        fromHostToDvceIfNecessary();
+        isCpuValid = false;
+        isGpuValid = true;
       }
 
       inline void enableCpuRead() const
@@ -592,13 +591,10 @@ namespace jusha {
 
       inline void enableCpuWrite() const
       {
-        if (!isCpuValid)
-          {
-            allocateCpuIfNecessary();
-            fromDvceToHostIfNecessary();
-            isCpuValid = true;
-            isGpuValid = false;
-          }
+        allocateCpuIfNecessary();
+        fromDvceToHostIfNecessary();
+        isCpuValid = true;
+        isGpuValid = false;
       }
   
       inline void fromHostToDvceIfNecessary() const
