@@ -9,10 +9,10 @@
 
 using namespace jusha;
 
-template <class T>
-struct ShReduce {
-  T *sh_ptr;
-};
+// template <class T>
+// struct ShReduce {
+//   T *sh_ptr;
+// };
 
 template <class T>
 class reduce_run_nv: public nvstd::function<void(T)> {
@@ -26,20 +26,16 @@ public:
   }
 
   __device__ void post_proc(int gid, thrust::tuple<const T*, T*> &tuple)  {
+    if (blockIdx.x == 0 & threadIdx.x < 2)
+      printf("my reduce %d tid %d.\n", m_reduce, threadIdx.x);
     m_reduce = jusha::cuda::blockReduceSum(m_reduce);
     if (threadIdx.x == 0)
-      m_reduce += (thrust::get<1>(tuple))[blockIdx.x] = m_reduce;
+      (thrust::get<1>(tuple))[blockIdx.x] = m_reduce;
 
-    //    m_reduce += (thrust::get<0>(tuple))[gid];
-    //    atomicAdd(thrust::get<0>(tuple), thrust::get<1>(tuple));
+    if (blockIdx.x == 0 & threadIdx.x < 2)
+      printf("after my reduce %d tid %d.\n", m_reduce, threadIdx.x);
+
   }
-
-  //  __device__ ~reduce_run_nv() {
-    // m_reduce = jusha::cuda::blockReduceSum(m_reduce);
-    // if (threadIdx.x == 0)
-    //   printf("my reduce is %d.\n", m_reduce);
-  //  }
-
 private:
   T m_reduce;
 };
@@ -47,21 +43,25 @@ private:
 
 
 TEST_CASE( "ForEachShmReduce", "[sum]" ) {
-  int n = 2000;
-  JVector<int> sum(n);
-  thrust::fill(sum.gbegin(), sum.gend(), 1);
-  //  ForEachKernel<StridePolicy, 256, false> fe(300);
-  //  AtomicAdd kernel(300);
-  //  AtomicAdd/*<decltype(atomic_run)>*/ kernel(/*atomic_run,*/ n1);
-  ForEachShmKernel<BlockPolicy, JC_cuda_warpsize, false> kernel(n, "Reduction");
-  kernel.set_block_size(1024);
-  kernel.set_max_block(1024);
-  JVector<int> inter_sum(1024);
-  constexpr int shared_bsize = sizeof(int)*1024/32;
-  kernel.run<reduce_run_nv<int>, int, shared_bsize, const int *, int *>(sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
+   int n = 2000;
+   JVector<int> sum(n);
+   thrust::fill(sum.gbegin(), sum.gend(), 1);
+   //  ForEachKernel<StridePolicy, 256, false> fe(300);
+   //  AtomicAdd kernel(300);
+   //  AtomicAdd/*<decltype(atomic_run)>*/ kernel(/*atomic_run,*/ n1);
+   ForEachShmKernel<BlockPolicy, JC_cuda_warpsize, false> kernel(n, "Reduction");
+   kernel.set_block_size(1024);
+   kernel.set_max_block(1024);
+   JVector<int> inter_sum(1024);
+   constexpr int shared_bsize = sizeof(int)*1024/32;
+   
+   kernel.run<reduce_run_nv<int>, int, shared_bsize, const int *, int *>(sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
+  inter_sum.print("intersum");
+   kernel.set_N(1024);
+   kernel.run<reduce_run_nv<int>, int, shared_bsize, const int *, int *>(inter_sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
+      inter_sum.print("intersum after");
 
-
-
+   REQUIRE(inter_sum.getElementAt(0) == n);
   // int sum_now = sum[0];
   // REQUIRE(sum_now == n1*add_per_thread);
 
