@@ -1,4 +1,6 @@
+#include <thrust/iterator/constant_iterator.h>
 #include <thrust/transform.h>
+#include <thrust/fill.h>
 #include "./array.h"
 
 namespace jusha {
@@ -24,6 +26,38 @@ namespace jusha {
   void multiply(const JVector<int> &x0, const JVector<int> &x1, JVector<int> &y);
   
   
+  /*********************************************************************************
+         scale
+   *********************************************************************************/
+  namespace cuda {
+    template <class T>
+    void MirroredArray<T>::scale(const T &ratio) {
+      thrust::transform(gbegin(), gend(), thrust::constant_iterator<T>(ratio), gbegin(), thrust::multiplies<T>());
+      check_cuda_error("array scale", __FILE__, __LINE__);
+    }
+    
+    // Instantiation
+    template void MirroredArray<double>::scale(const double &ratio);
+    template void MirroredArray<float>::scale(const float &ratio);
+    template void MirroredArray<int>::scale(const int &ratio);  
+  }
+
+  
+  /*********************************************************************************
+         setVal
+   *********************************************************************************/
+  namespace cuda {
+    template <class T>
+    void MirroredArray<T>::fill(const T &val) {
+      thrust::fill(gbegin(), gend(), val);
+      check_cuda_error("array fill", __FILE__, __LINE__);
+    }
+    
+    // Instantiation
+    template void MirroredArray<double>::fill(const double &ratio);
+    template void MirroredArray<float>::fill(const float &ratio);
+    template void MirroredArray<int>::fill(const int &ratio);  
+  }
   
   /*********************************************************************************
          Next

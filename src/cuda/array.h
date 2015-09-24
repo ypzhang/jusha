@@ -354,6 +354,12 @@ namespace jusha {
         rng.apply(getGpuPtr(), mSize);
       }
 
+      // scale the array
+      void scale(const T &ratio);
+      
+      // set the array to the same value
+      void fill(const T &val);
+      
       // use sequence in thrust
       void sequence(int dir)
       {

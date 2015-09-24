@@ -37,7 +37,19 @@ TEST_CASE( "VecMultiply", "[simple]" ) {
  
 }
 
+TEST_CASE( "VecScale", "[array]" ) {
+  int test_size = 256 * 20000 +124;
+//int test_size = 256*1;
+  JVector<int> v0(test_size);
+  v0.sequence(0);
+  v0.scale(0.0);
+  JVector<int> v0v1(test_size);
+  v0v1.zero();
+  // both zeros
+  REQUIRE(v0.isEqualTo(v0v1));  
+}
 
+    
 TEST_CASE( "VecAdd", "[array]" ) {
 int test_size = 256 * 20000 +124;
 //int test_size = 256*1;

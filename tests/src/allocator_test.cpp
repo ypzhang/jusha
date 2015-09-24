@@ -55,13 +55,13 @@ TEST_CASE( "HeapManager", "[simple]" ) {
 TEST_CASE( "HeapManager::Random", "[random]" ) {
   HeapAllocator hm;
   std::vector<std::pair<float *, size_t>> ptrs;
-  for (int i = 0; i != 1000; i++) {
+  for (int i = 0; i != 10; i++) {
     // get size in range [1, 1<<25]
     size_t size = rand() % (1<<24) + 1;  
     float *ptr = (float*)hm.allocate(size);
     ptrs.push_back(std::make_pair(ptr, size));
   }
-  for (int i = 0; i != 1000; i++) {
+  for (int i = 0; i != 10; i++) {
     // get size in range [1, 1<<25]
     hm.deallocate(ptrs[i].first, ptrs[i].second);
   }
