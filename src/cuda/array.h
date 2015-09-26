@@ -114,7 +114,7 @@ namespace jusha {
           deep_copy(rhs);
           return *this;
         }
-      
+
 
       // deep copy from
       void deep_copy(const MirroredArray<T> &src) 

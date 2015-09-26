@@ -67,7 +67,7 @@ message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
 #    FORCE)
 #endif()
 
-set(CUDA_SEPARABLE_COMPILATION ON)
+#set(CUDA_SEPARABLE_COMPILATION ON)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Werror")
@@ -109,7 +109,6 @@ include_directories("${CMAKE_SOURCE_DIR}/src/lib/cub-1.3.2")
 include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
 #include_directories("${HDF5_INCLUDE_DIRS}")
 #include_directories("${HEMI_ROOT})
-      
 
 # this flag is for gcc only
 set (CMAKE_MACOSX_RPATH On)
@@ -195,8 +194,8 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
 	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20} "-std=c++11" "--relaxed-constexpr" "--resource-usage" "-v"
-	RELEASE --use_fast_math;-g;-O3;-DNDEBUG;
-	DEBUG -g;-O0;-DDEBUG;
+	RELEASE --use_fast_math;-g;-O3;-DNDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20}
+	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20}
     ) # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
 #else()

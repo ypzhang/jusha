@@ -22,10 +22,12 @@ public:
   }
   __device__ void operator()(int gid, thrust::tuple<const T*, T*> &tuple)  {
     m_reduce += (thrust::get<0>(tuple))[gid];
+    printf("m_reduce is %d.\n", m_reduce);
     //    atomicAdd(thrust::get<0>(tuple), thrust::get<1>(tuple));
   }
 
   __device__ void post_proc(int gid, thrust::tuple<const T*, T*> &tuple)  {
+    printf("here in post proc\n");
     if (blockIdx.x == 0 & threadIdx.x < 2)
       printf("my reduce %d tid %d.\n", m_reduce, threadIdx.x);
     m_reduce = jusha::cuda::blockReduceSum(m_reduce);
@@ -60,7 +62,8 @@ TEST_CASE( "ForEachShmReduce", "[sum]" ) {
    kernel.set_N(1024);
    kernel.run<reduce_run_nv<int>, int, shared_bsize, const int *, int *>(inter_sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
       inter_sum.print("intersum after");
-
+  check_cuda_error("atomic", __FILE__, __LINE__);
+  
    REQUIRE(inter_sum.getElementAt(0) == n);
   // int sum_now = sum[0];
   // REQUIRE(sum_now == n1*add_per_thread);

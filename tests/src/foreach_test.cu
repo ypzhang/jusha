@@ -73,6 +73,7 @@ TEST_CASE( "ForEachStride", "[sum]" ) {
 //  printf("running atomic add kernel\n");
   kernel.run<atomic_run_nv<int>, int *, int>(sum.getGpuPtr(), add_per_thread);
   int sum_now = sum[0];
+  check_cuda_error("atomic", __FILE__, __LINE__);
   REQUIRE(sum_now == n1*add_per_thread);
 
   kernel.set_N(257);
