@@ -47,12 +47,16 @@ class CudaKernel {
     m_auto_tuning = false;
   }
 
+  int get_num_blocks() const {
+    return m_blocks;
+  }
 protected:
   std::string m_tag;
   int m_block_size = jusha::cuda::JCKonst::cuda_blocksize;
   int m_max_blocks = jusha::cuda::JCKonst::cuda_max_blocks * 2;
   bool m_auto_tuning = true;
   cudaStream_t m_stream = 0;
+  int m_blocks = 0;
 };
  
 

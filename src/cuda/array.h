@@ -589,11 +589,10 @@ namespace jusha {
       {
         allocateGpuIfNecessary();
         if (!isGpuValid)
-          {
-            fromHostToDvceIfNecessary();
-            isCpuValid = false;
-            isGpuValid = true;
-          }
+	  fromHostToDvceIfNecessary();
+	
+	isCpuValid = false;
+	isGpuValid = true;
       }
 
       inline void enableCpuRead() const
@@ -610,11 +609,10 @@ namespace jusha {
       {
         allocateCpuIfNecessary();
         if (!isCpuValid)
-          {
-            fromDvceToHostIfNecessary();
-            isCpuValid = true;
-            isGpuValid = false;
-          }
+	  fromDvceToHostIfNecessary();
+
+	isCpuValid = true;
+	isGpuValid = false;
       }
   
       inline void fromHostToDvceIfNecessary() const

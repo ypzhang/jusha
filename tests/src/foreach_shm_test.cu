@@ -22,20 +22,19 @@ public:
   }
   __device__ void operator()(int gid, thrust::tuple<const T*, T*> &tuple)  {
     m_reduce += (thrust::get<0>(tuple))[gid];
-    printf("m_reduce is %d.\n", m_reduce);
     //    atomicAdd(thrust::get<0>(tuple), thrust::get<1>(tuple));
   }
 
   __device__ void post_proc(int gid, thrust::tuple<const T*, T*> &tuple)  {
-    printf("here in post proc\n");
-    if (blockIdx.x == 0 & threadIdx.x < 2)
-      printf("my reduce %d tid %d.\n", m_reduce, threadIdx.x);
+    //    printf("here in post proc\n");
+    // if (blockIdx.x == 0 & threadIdx.x < 2)
+    //   printf("my reduce %d tid %d.\n", m_reduce, threadIdx.x);
     m_reduce = jusha::cuda::blockReduceSum(m_reduce);
     if (threadIdx.x == 0)
       (thrust::get<1>(tuple))[blockIdx.x] = m_reduce;
 
-    if (blockIdx.x == 0 & threadIdx.x < 2)
-      printf("after my reduce %d tid %d.\n", m_reduce, threadIdx.x);
+    // if (blockIdx.x == 0 & threadIdx.x < 2)
+    //   printf("after my reduce %d tid %d.\n", m_reduce, threadIdx.x);
 
   }
 private:
@@ -58,21 +57,22 @@ TEST_CASE( "ForEachShmReduce", "[sum]" ) {
    constexpr int shared_bsize = sizeof(int)*1024/32;
    
    kernel.run<reduce_run_nv<int>, int, shared_bsize, const int *, int *>(sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
-  inter_sum.print("intersum");
-   kernel.set_N(1024);
+   //   inter_sum.print("intersum");
+   kernel.set_N(kernel.get_num_blocks());
    kernel.run<reduce_run_nv<int>, int, shared_bsize, const int *, int *>(inter_sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
-      inter_sum.print("intersum after");
-  check_cuda_error("atomic", __FILE__, __LINE__);
-  
+   cudaDeviceSynchronize();
+   //   inter_sum.print("intersum after");
+   check_cuda_error("inter_sum", __FILE__, __LINE__);
+   
    REQUIRE(inter_sum.getElementAt(0) == n);
-  // int sum_now = sum[0];
-  // REQUIRE(sum_now == n1*add_per_thread);
+   // int sum_now = sum[0];
+   // REQUIRE(sum_now == n1*add_per_thread);
+   
+   // kernel.set_N(257);
+   // kernel.run<atomic_run_nv<int>, int *, int >(sum.getGpuPtr(), 12);
+   // REQUIRE(sum[0] == (sum_now + 257*12));
 
-  // kernel.set_N(257);
-  // kernel.run<atomic_run_nv<int>, int *, int >(sum.getGpuPtr(), 12);
-  // REQUIRE(sum[0] == (sum_now + 257*12));
-
-  check_cuda_error("atomic", __FILE__, __LINE__);
+   check_cuda_error("inter_sum", __FILE__, __LINE__);
 }
 
 

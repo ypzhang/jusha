@@ -193,7 +193,7 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 #if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20} "-std=c++11" "--relaxed-constexpr" "--resource-usage" "-v"
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20} "-std=c++11" "--relaxed-constexpr" # "--resource-usage" "-v"
 	RELEASE --use_fast_math;-g;-O3;-DNDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20}
 	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20}
     ) # "-Xcompiler ,\"-std=c++11\"")

@@ -36,5 +36,6 @@
 *.toc
 
 .*
-
+release/
+debug/
 TAGS

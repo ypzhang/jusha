@@ -57,7 +57,7 @@ namespace jusha {
 
     template <class Method, class Shared_T, int SharedSize, class... Args>
     void run(Args... args) {
-      int blocks = GET_BLOCKS(m_N, m_block_size);
+      m_blocks = GET_BLOCKS(m_N, m_block_size);
       int BS = m_block_size; //jusha::cuda::JCKonst::cuda_blocksize;
 #if 0
       if (m_auto_tuning) {
@@ -66,17 +66,17 @@ namespace jusha {
         cudaOccupancyMaxPotentialBlockSize(&min_gridsize, &blocksize, for_each_shm_kernel<Policy, group_size, need_sync, Method, Args...>,
                                            0, m_N);
         BS = blocksize;
-        blocks = GET_BLOCKS(m_N, blocksize);
-        blocks = std::min(blocks, 8 * min_gridsize);
+        m_blocks = GET_BLOCKS(m_N, blocksize);
+        m_blocks = std::min(blocks, 8 * min_gridsize);
         printf("auto tuning kernel %s to use block size %d grid size %d, min_gridsize %d\n",
                get_tag().c_str(), blocks, blocksize, min_gridsize);
 
       }
       //      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
 #endif
-      blocks = std::min(m_max_blocks, blocks);
-      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
-      for_each_shm_kernel<Policy, group_size, need_sync, Method, Shared_T, SharedSize, Args...><<<blocks, BS>>>(m_N, args...);
+      m_blocks = std::min(m_max_blocks, m_blocks);
+      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), m_blocks, BS);
+      for_each_shm_kernel<Policy, group_size, need_sync, Method, Shared_T, SharedSize, Args...><<<m_blocks, BS>>>(m_N, args...);
     }
       
     void set_N(int32_t _N) {
