@@ -40,8 +40,6 @@ namespace jusha {
         }
       fe.next_batch();
     }
-    if (threadIdx.x == 0 && blockIdx.x == 0)
-      printf("calling post proc\n");
     _method.post_proc(fe.get_id(), tuple);
   }
 
@@ -75,7 +73,7 @@ namespace jusha {
       //      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
 #endif
       m_blocks = std::min(m_max_blocks, m_blocks);
-      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), m_blocks, BS);
+      //      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), m_blocks, BS);
       for_each_shm_kernel<Policy, group_size, need_sync, Method, Shared_T, SharedSize, Args...><<<m_blocks, BS>>>(m_N, args...);
     }
       

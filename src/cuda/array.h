@@ -326,7 +326,7 @@ namespace jusha {
         T ele; 
         allocateCpuIfNecessary();
         //        cudaError_t error = cudaMemcpy(&ele, dvcebase+index, sizeof(T),cudaMemcpyDeviceToHost); 
-        printf("calling cudamemcpy \n");
+	//        printf("calling cudamemcpy \n");
         cudaError_t error = cudaMemcpy(&ele, dvceBase+index, sizeof(T),cudaMemcpyDeviceToHost); 
         //    std::cout << "memcpy d2h size:" << sizeof(T)  << std::endl;
         jassert(error == cudaSuccess);
