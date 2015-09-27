@@ -318,7 +318,7 @@ namespace jusha {
       const T getElementAt(const int index) const
       {
         assert(index < mSize);
-        printf("cpu valid %d gpu valid %d.\n", isCpuValid, isGpuValid);
+        //        printf("cpu valid %d gpu valid %d.\n", isCpuValid, isGpuValid);
         assert(isCpuValid || isGpuValid);
         if (isCpuValid)
           //          return hostBase[index];

@@ -12,7 +12,7 @@ namespace jusha {
   template <template <int, bool> class Policy, int groupsize, int need_sync, class Fn, class Shared_T, int SharedSize, class... Args>
   static __global__ void for_each_shm_kernel(int N, Args... args)
   {
-    Shared_T sh_item[SharedSize];
+    //    Shared_T sh_item[SharedSize];
     int max_id = blockDim.x * gridDim.x;
     int id = threadIdx.x+blockDim.x*blockIdx.x; 
     ForEach<Policy, groupsize, need_sync> fe(N, id, max_id);
@@ -70,10 +70,10 @@ namespace jusha {
                get_tag().c_str(), blocks, blocksize, min_gridsize);
 
       }
-      //      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
+          printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), blocks, BS);
 #endif
       m_blocks = std::min(m_max_blocks, m_blocks);
-      //      printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), m_blocks, BS);
+          printf ("running kernel %s at gridsize %d blocksize %d.\n", get_tag().c_str(), m_blocks, BS);
       for_each_shm_kernel<Policy, group_size, need_sync, Method, Shared_T, SharedSize, Args...><<<m_blocks, BS>>>(m_N, args...);
     }
       
