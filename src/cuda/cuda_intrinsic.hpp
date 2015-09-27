@@ -1,5 +1,5 @@
 #pragma once
-#include "cuda/cuda_config.h"
+#include "./cuda_config.h"
 
 namespace jusha {
   namespace cuda {

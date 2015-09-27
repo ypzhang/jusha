@@ -2,6 +2,8 @@
 #include <catch.hpp>
 
 #include "utility.h"
+
+
 using namespace jusha;
 TEST_CASE( "Alwayspass", "[Simple]" ) {
 

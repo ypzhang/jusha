@@ -77,7 +77,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Werror")
 set(CUDA_BLOCKSIZE 256 CACHE STRING "CUDA block size.")
 
 # CUDA architecture options.
-#set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
 set(GENCODE_SM35 "-gencode=arch=compute_35,code=sm_35")
 set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
 set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
@@ -98,7 +97,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 #  add_definitions("-DDEBUG")	
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -O0 -g")
 else()
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -O3")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")
 endif()
 
 
@@ -193,9 +192,9 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 #if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20} "-std=c++11" "--relaxed-constexpr" # "--resource-usage" "-v"
-	RELEASE --use_fast_math;-g;-O3;-DNDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20}
-	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20}
+	OPTIONS ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30} ${GENCODE_SM20} "-std=c++11" # "--relaxed-constexpr" # "--resource-usage" "-v"
+	RELEASE --use_fast_math;-g;-O3; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30}
+	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM50} ${GENCODE_SM35} ${GENCODE_SM30}
     ) # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
 #else()
@@ -203,11 +202,11 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 #  cuda_add_library(jusha STATIC ${CPP_SRC_LIST} ${CU_SRC_LIST} ${HEADERS_LIST})
 #endif()
 
-if (APPLE)
-target_link_libraries(jusha /usr/local/cuda/lib/libcudadevrt.a)
-elseif (UNIX)
-target_link_libraries(jusha /usr/local/cuda/lib64/libcudadevrt.a)
-endif()
+#if (APPLE)
+#target_link_libraries(jusha /usr/local/cuda/lib/libcudadevrt.a)
+#elseif (UNIX)
+#target_link_libraries(jusha /usr/local/cuda/lib64/libcudadevrt.a)
+#endif()
 
 target_link_libraries(jusha ${CUDA_curand_LIBRARY})
 #include_directories(/opt/local/lib)

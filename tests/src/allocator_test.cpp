@@ -47,6 +47,25 @@ TEST_CASE( "BinIndex", "[simple]" ) {
 }
 
 TEST_CASE( "HeapManager", "[simple]" ) {
+  size_t free, total;
+  int device_id = 0;
+  cudaError_t error = cudaSetDevice(device_id);
+  if (error != cudaSuccess) 
+    printf("cudasetdevice return error.\n");
+
+  struct cudaDeviceProp prop;
+  error = cudaGetDeviceProperties(&prop, device_id);
+  if (error != cudaSuccess) 
+    printf("cudagetdeviceproperties return error %s.\n", cudaGetErrorString(error));
+  else
+    printf("cuda device %d %s compute capability %d.%d.\n", device_id, prop.name,
+	   prop.major, prop.minor);
+  
+  error = cudaMemGetInfo(&free, &total);
+  if (error != cudaSuccess) 
+    printf("cudamemgetinfo return error %s.\n", cudaGetErrorString(error));
+  
+  printf("testing heap manager total %ld, free %ld\n", total, free);
   HeapAllocator hm;
   int *ptr = (int*)hm.allocate(g_min_block_bsize);
   hm.deallocate(ptr, g_min_block_bsize);

@@ -75,4 +75,37 @@ TEST_CASE( "ForEachShmReduce", "[sum]" ) {
    check_cuda_error("inter_sum", __FILE__, __LINE__);
 }
 
+TEST_CASE( "ForEachShmReduceDouble", "[sum]" ) {
+   int n = 2000;
+   JVector<double> sum(n);
+   thrust::fill(sum.gbegin(), sum.gend(), 1);
+   //  ForEachKernel<StridePolicy, 256, false> fe(300);
+   //  AtomicAdd kernel(300);
+   //  AtomicAdd/*<decltype(atomic_run)>*/ kernel(/*atomic_run,*/ n1);
+   ForEachShmKernel<BlockPolicy, JC_cuda_warpsize, false> kernel(n, "Reduction");
+   kernel.set_block_size(1024);
+   kernel.set_max_block(1024);
+   JVector<double> inter_sum(1024);
+   constexpr int shared_bsize = sizeof(double)*1024/32;
+   
+   kernel.run<reduce_run_nv<double>, double, shared_bsize, const double *, double *>(sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
+   //   inter_sum.print("intersum");
+   kernel.set_N(kernel.get_num_blocks());
+   kernel.run<reduce_run_nv<double>, double, shared_bsize, const double *, double *>(inter_sum.getReadOnlyGpuPtr(), inter_sum.getGpuPtr());
+   cudaDeviceSynchronize();
+   //   inter_sum.print("intersum after");
+   check_cuda_error("inter_sum", __FILE__, __LINE__);
+   
+   REQUIRE(inter_sum.getElementAt(0) == n);
+   // int sum_now = sum[0];
+   // REQUIRE(sum_now == n1*add_per_thread);
+   
+   // kernel.set_N(257);
+   // kernel.run<atomic_run_nv<int>, int *, int >(sum.getGpuPtr(), 12);
+   // REQUIRE(sum[0] == (sum_now + 257*12));
+
+   check_cuda_error("inter_sum", __FILE__, __LINE__);
+}
+
+
 

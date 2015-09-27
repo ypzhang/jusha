@@ -62,6 +62,12 @@ namespace jusha {
         assert(allocator);
         *addr = allocator->allocate(size);
 #endif
+	if (addr == 0) {
+	  size_t free, total;
+	  cudaMemGetInfo(&free, &total);
+	  fprintf(stderr, "Failed to allocate memory size %f Kbytes, free memory %f Kbytes, total %f Kbytes.\n",
+		  float(size)/1000., float(free)/1000., float(total)/1000.);
+	}
 #ifdef _DEBUG
         mGpuMemoryTracker.insert( pair<void *, int>(*addr, size));
         curGpuUsage += size;

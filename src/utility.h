@@ -20,6 +20,8 @@ namespace jusha {
 
   void check_cuda_error(const char *kernelname, const char *file, int line_no, cudaStream_t stream = 0);
 
+  void check_cuda_error_always(const char *kernelname, const char *file, int line_no, cudaStream_t stream = 0);  
+
   double jusha_get_wtime();
 
 }

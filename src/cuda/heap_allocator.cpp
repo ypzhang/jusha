@@ -14,12 +14,16 @@ namespace jusha {
   size_t g_current_alloc_bsize = 0;
   /*************************************************************/
   bool SubBin::init(size_t block_size, int BIN_SIZE) {
+    // size_t free, total;
+    // cudaMemGetInfo(&free, &total);
+    // printf("allocating memory, total %ld, free %ld\n", total, free);    
     m_block_size = block_size;
     m_bytes_this_sub_bin = block_size * BIN_SIZE;
-    
+    //    printf("init block size %ld\n",  block_size);
     char *base = 0;
     cudaMalloc((void**)(&base), m_bytes_this_sub_bin);
     check_cuda_error("cudaMalloc", __FILE__, __LINE__);
+    //    printf("base %p\n",  base);
     if (base == 0) return false; // out of memory
 #ifdef DEBUG_HEAP_ALLOC
     g_current_alloc_bsize += m_bytes_this_sub_bin;
@@ -127,7 +131,11 @@ namespace jusha {
     assert(bin_id < (int)m_bins.size());
     void *ptr =  m_bins[bin_id].allocate(bsize);
     if (ptr == nullptr) {
-      fprintf(stderr, "Error!!! Running out of GPU memory!!!!! Do defragmentating (TODO).\n");
+      size_t free, total;
+      cudaMemGetInfo(&free, &total);
+      check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
+      fprintf(stderr, "Error!!! Running out of GPU memory free %f MB, !!!!! Do defragmentating (TODO).\n",
+	      (float)free/1e6);
       abort();
     }
 #ifdef DEBUG_HEAP_ALLOC
