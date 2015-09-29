@@ -113,12 +113,13 @@ include_directories("${CMAKE_SOURCE_DIR}/src/lib/catch")
 # this flag is for gcc only
 set (CMAKE_MACOSX_RPATH On)
 
-if (APPLE)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif (UNIX)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#if (APPLE)
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#elseif (UNIX)
+
 #set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-XCompiler, \\"-std=C++11\\"")
-endif()
+#endif()
 #-std=c++0x
 # Split the library in two parts, the CUDA one and the CPP one.
 set(CPP_SRC_LIST

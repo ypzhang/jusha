@@ -24,6 +24,12 @@ namespace jusha {
   namespace cuda {  
     #define MAX_PRINT_SIZE 32
 
+    enum class ArrayType
+    { 
+      CPU_ARRAY = 0,
+        GPU_ARRAY = 1
+        } ;
+
     template <class T>
       class MirroredArray{
     public:
@@ -35,10 +41,39 @@ namespace jusha {
         isCpuValid(false),
         isGpuValid(false),
         gpuAllocated(false),
-        cpuAllocated(false)
+    cpuAllocated(false),
+    isGpuArray(true)
       {
       }
-      
+
+    // explicit MirroredArray(bool gpuArray):
+    //     mSize(0),
+    //     mCapacity(0),
+    //     hostBase(),
+    //     dvceBase(),
+    //     isCpuValid(false),
+    //     isGpuValid(false),
+    //     gpuAllocated(false),
+    //     cpuAllocated(false),
+    //   isGpuArray(gpuArray? true:  false)
+    //   {
+        
+    //   }      
+
+      // explicit MirroredArray(ArrayType t):
+      //   mSize(0),
+      //   mCapacity(0),
+      //   hostBase(),
+      //   dvceBase(),
+      //   isCpuValid(false),
+      //   isGpuValid(false),
+      //   gpuAllocated(false),
+      //   cpuAllocated(false),
+      // isGpuArray( t == ArrayType::GPU_ARRAY? true:  false)
+      // {
+        
+      // }      
+
       ~MirroredArray() {
         destroy();
       }
@@ -155,8 +190,8 @@ namespace jusha {
       }
 
       void alias(const MirroredArray<T> & dst) {
-	shallow_copy(dst);
-	mCapacity = -1; // to disable calling free
+        shallow_copy(dst);
+        mCapacity = -1; // to disable calling free
       }
       
       void clear()
@@ -265,9 +300,12 @@ namespace jusha {
 
       void zero()
       {
-        enableGpuWrite();
-        cudaMemset((void *)dvceBase, 0, sizeof(T)*mSize);
-	check_cuda_error("after cudaMemset", __FILE__, __LINE__);
+        if (isGpuArray) {
+          cudaMemset((void *)getGpuPtr(), 0, sizeof(T)*mSize);
+          check_cuda_error("after cudaMemset", __FILE__, __LINE__);
+        } else {
+          cudaMemset((void *)getPtr(), 0, sizeof(T)*mSize);
+        }
       }
 
 
@@ -666,6 +704,7 @@ namespace jusha {
       mutable bool isGpuValid;
       mutable bool gpuAllocated;
       mutable bool cpuAllocated;
+      mutable bool isGpuArray;
 
       void shallow_copy(const MirroredArray<T> &rhs)
       {
