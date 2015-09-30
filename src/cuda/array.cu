@@ -1,6 +1,7 @@
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/transform.h>
 #include <thrust/fill.h>
+#include <algorithm>
 #include "./array.h"
 
 namespace jusha {
@@ -42,6 +43,7 @@ namespace jusha {
     template void MirroredArray<int>::scale(const int &ratio);  
   }
 
+
   
   /*********************************************************************************
          setVal
@@ -49,14 +51,30 @@ namespace jusha {
   namespace cuda {
     template <class T>
     void MirroredArray<T>::fill(const T &val) {
-      thrust::fill(gbegin(), gend(), val);
-      check_cuda_error("array fill", __FILE__, __LINE__);
+      if (isGpuArray) {
+	thrust::fill(gbegin(), gend(), val);
+	check_cuda_error("array fill", __FILE__, __LINE__);
+      } else {
+	std::fill(getPtr(), getPtr()+size(), val);
+      }
+    }
+
+    template <typename T>
+    void fill(T *begin, T *end, const T & val) {
+      thrust::fill(begin, end, val);      
     }
     
     // Instantiation
     template void MirroredArray<double>::fill(const double &ratio);
     template void MirroredArray<float>::fill(const float &ratio);
-    template void MirroredArray<int>::fill(const int &ratio);  
+    template void MirroredArray<int>::fill(const int &ratio);
+
+    template void fill(double *, double *, const double &);
+    template void fill(float *, float *, const float &);
+    template void fill(int *, int *, const int &);
+    template void fill(long long*, long long*, const long long &);
+    template void fill(float2 *, float2 *, const float2 &);
+    template void fill(float4 *, float4 *, const float4 &);    
   }
   
   /*********************************************************************************

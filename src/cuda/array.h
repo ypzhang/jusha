@@ -24,6 +24,9 @@ namespace jusha {
   namespace cuda {  
     #define MAX_PRINT_SIZE 32
 
+    template <typename T>
+    void fill(T *begin, T *end, const T & val);
+    
     enum class ArrayType
     { 
       CPU_ARRAY = 0,
@@ -42,7 +45,7 @@ namespace jusha {
         isGpuValid(false),
         gpuAllocated(false),
     cpuAllocated(false),
-    isGpuArray(true)
+	isGpuArray(false)
       {
       }
 
@@ -79,15 +82,18 @@ namespace jusha {
       }
       
       void destroy() {
-	if (mCapacity < 0) return;
-        if (dvceBase)
+        if (dvceBase && mCapacity > 0) {
 #ifdef USE_SHARED_PTR
           gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
 #else
         gHeapManager.NeFree(GPU_HEAP, dvceBase, size()*sizeof(T));
 #endif
-        if (hostBase)
+	dvceBase = NULL;
+	}
+        if (hostBase && mCapacity > 0) {
           gHeapManager.NeFree(CPU_HEAP, hostBase, size()*sizeof(T));
+	  hostBase = NULL;	  
+	}
         init_state();
       }
       // Copy Constructor
@@ -135,13 +141,14 @@ namespace jusha {
 #if USE_SHARED_PTR
         hostBase.reset(ptr);
 #else
-        if (hostBase)
+        if (hostBase && mCapacity >= 0)
           gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
         hostBase = ptr;
 #endif
         isGpuValid = false;
         isCpuValid = true;
         cpuAllocated = true;
+        mCapacity = -1; // to disable calling free	
       }
       
       MirroredArray<T> &operator=(const MirroredArray<T> &rhs)
@@ -256,6 +263,16 @@ namespace jusha {
 #else
             T *newDvceBase(0);
             T *newHostBase(0);
+	    if (!gpuAllocated && !cpuAllocated) {
+	      if (isGpuArray) {
+		gHeapManager.NeMalloc(GPU_HEAP, (void**)&newDvceBase, _size * sizeof(T));
+                assert(newDvceBase);
+	      } else {
+		gHeapManager.NeMalloc(CPU_HEAP, (void**)&newHostBase, _size*sizeof(T));
+                //            newHostBase = (T*)malloc(size * sizeof(T));
+                assert(newHostBase);
+	      }
+	    }
             if (gpuAllocated)
               {
                 // cutilSafeCall(cudaMalloc((void**) &newDvceBase, size * _sizeof(T)));
@@ -276,10 +293,9 @@ namespace jusha {
             if (isGpuValid && gpuAllocated)
               {
                 cudaError_t error = cudaMemcpy(newDvceBase, dvceBase, mSize*sizeof(T), cudaMemcpyDeviceToDevice);
-                //            std::cout << "memcpy d2d size:" << mSize*sizeof(T)  << std::endl;
                 jassert(error == cudaSuccess);
               }
-            if (hostBase)
+            if (hostBase && mCapacity > 0)
               gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
             //          free(hostBase);
             if (dvceBase)
@@ -292,6 +308,10 @@ namespace jusha {
 #endif
             hostBase = newHostBase;
             dvceBase = newDvceBase;
+	    // if (hostBase)
+	    //   std::fill(hostBase+mSize, hostBase + _size, T());
+	    // if (dvceBase)
+	    //   jusha::cuda::fill(dvceBase + mSize, dvceBase + _size, T());
             mSize = _size;
             mCapacity = _size;
 #endif
@@ -304,7 +324,7 @@ namespace jusha {
           cudaMemset((void *)getGpuPtr(), 0, sizeof(T)*mSize);
           check_cuda_error("after cudaMemset", __FILE__, __LINE__);
         } else {
-          cudaMemset((void *)getPtr(), 0, sizeof(T)*mSize);
+          memset((void *)getPtr(), 0, sizeof(T)*mSize);
         }
       }
 
