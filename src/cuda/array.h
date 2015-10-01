@@ -26,6 +26,9 @@ namespace jusha {
 
     template <typename T>
     void fill(T *begin, T *end, const T & val);
+
+    template <typename T>
+    void fill(thrust::device_ptr<T> begin, thrust::device_ptr<T> end, const T&val);
     
     enum class ArrayType
     { 
@@ -82,7 +85,7 @@ namespace jusha {
       }
       
       void destroy() {
-        if (dvceBase && mCapacity > 0) {
+        if (dvceBase && gpuNeedToFree) {
 #ifdef USE_SHARED_PTR
           gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
 #else
@@ -90,7 +93,7 @@ namespace jusha {
 #endif
 	dvceBase = NULL;
 	}
-        if (hostBase && mCapacity > 0) {
+        if (hostBase && mCapacity > 0 && cpuNeedToFree) {
           gHeapManager.NeFree(CPU_HEAP, hostBase, size()*sizeof(T));
 	  hostBase = NULL;	  
 	}
@@ -127,12 +130,13 @@ namespace jusha {
             dvceBase = newDvceBase;
           }
 #else
-        if (dvceBase)
+        if (dvceBase && gpuNeedToFree)
           gHeapManager.NeFree(GPU_HEAP, dvceBase, sizeof(T)*mSize);
         dvceBase = ptr;
 #endif
         isCpuValid = false;
         isGpuValid = true;
+	gpuNeedToFree = needToFree;
         gpuAllocated = true;
       }
       
@@ -141,14 +145,15 @@ namespace jusha {
 #if USE_SHARED_PTR
         hostBase.reset(ptr);
 #else
-        if (hostBase && mCapacity >= 0)
+        if (hostBase && mCapacity >= 0 && cpuNeedToFree)
           gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
         hostBase = ptr;
 #endif
         isGpuValid = false;
         isCpuValid = true;
         cpuAllocated = true;
-        mCapacity = -1; // to disable calling free	
+	cpuNeedToFree = false;
+	//        mCapacity = -1; // to disable calling free	
       }
       
       MirroredArray<T> &operator=(const MirroredArray<T> &rhs)
@@ -295,10 +300,10 @@ namespace jusha {
                 cudaError_t error = cudaMemcpy(newDvceBase, dvceBase, mSize*sizeof(T), cudaMemcpyDeviceToDevice);
                 jassert(error == cudaSuccess);
               }
-            if (hostBase && mCapacity > 0)
+            if (hostBase && mCapacity > 0 && cpuNeedToFree)
               gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
             //          free(hostBase);
-            if (dvceBase)
+            if (dvceBase && gpuNeedToFree)
               {
                 gHeapManager.NeFree(GPU_HEAP, dvceBase, sizeof(T)*mSize);
                 //            cutilSafeCall(cudaFree(dvceBase));
@@ -416,7 +421,14 @@ namespace jusha {
       void scale(const T &ratio);
       
       // set the array to the same value
-      void fill(const T &val);
+      void fill(const T &val) {
+	if (isGpuArray) {
+	  jusha::cuda::fill(gbegin(), gend(), val);
+	  check_cuda_error("array fill", __FILE__, __LINE__);
+	} else {
+	  std::fill(getPtr(), getPtr()+size(), val);
+	}
+      }
       
       // use sequence in thrust
       void sequence(int dir)
@@ -725,6 +737,8 @@ namespace jusha {
       mutable bool gpuAllocated;
       mutable bool cpuAllocated;
       mutable bool isGpuArray;
+      mutable bool gpuNeedToFree = true;
+      mutable bool cpuNeedToFree = true;      
 
       void shallow_copy(const MirroredArray<T> &rhs)
       {
