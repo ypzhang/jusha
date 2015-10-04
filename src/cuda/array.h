@@ -134,7 +134,7 @@ namespace jusha {
           gHeapManager.NeFree(GPU_HEAP, dvceBase, sizeof(T)*mSize);
         dvceBase = ptr;
 #endif
-        isCpuValid = false;
+	//        isCpuValid = false;
         isGpuValid = true;
 	gpuNeedToFree = needToFree;
         gpuAllocated = true;
@@ -149,7 +149,6 @@ namespace jusha {
           gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
         hostBase = ptr;
 #endif
-        isGpuValid = false;
         isCpuValid = true;
         cpuAllocated = true;
 	cpuNeedToFree = false;
@@ -181,6 +180,13 @@ namespace jusha {
           }
       }
 
+      bool GpuHasLatest() const {
+	return isGpuValid;
+      }
+
+      bool CpuHasLatest() const {
+	return isCpuValid;
+      }
       
       // deep copy to
       void clone(MirroredArray<T> &dst) const
@@ -596,7 +602,22 @@ namespace jusha {
       return thrust::device_ptr<T>(const_cast<T*>(getReadOnlyGpuPtr()+mSize));
     }
 
+      /*! explicitly sync to GPU buffer */
+      void syncToGpu() const {
+	assert(!(isGpuValid && !isCpuValid));
+	allocateGpuIfNecessary();
+	fromHostToDvce();
+	isGpuValid = true;
+      }
 
+      /*! explicitly sync to CPU buffer */
+      void syncToCpu() const {
+	assert(!(isCpuValid && !isGpuValid));
+	allocateCpuIfNecessary();
+	fromDvceToHost();	
+	isCpuValid = true;
+      }
+      
     private:
       void init_state() {
         mSize = 0;
@@ -684,7 +705,14 @@ namespace jusha {
 	isCpuValid = true;
 	isGpuValid = false;
       }
-  
+
+      inline void fromHostToDvce() const {
+	cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
+	//        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
+	jassert(error == cudaSuccess);
+	
+      }
+      
       inline void fromHostToDvceIfNecessary() const
       {
         if (isCpuValid && !isGpuValid)
@@ -692,13 +720,19 @@ namespace jusha {
 #ifdef _DEBUG_
             std::cout << "sync mirror array from host 0x" << std::hex << hostBase << " to device 0x" << dvcebase << " size(" << mSize << "); \n";
 #endif
-            //            cudaError_t error = cudaMemcpy(dvcebase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
-            cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
-            //        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
-            jassert(error == cudaSuccess);
+            fromHostToDvce();
+	    //            cudaError_t error = cudaMemcpy(dvcebase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
           }
       }
 
+      inline void fromDvceToHost() const
+      {
+	if (mSize){
+	  cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
+	  jassert(error == cudaSuccess);
+	}
+      }
+      
       inline void fromDvceToHostIfNecessary() const
       {
         if (isGpuValid && !isCpuValid)
@@ -716,10 +750,7 @@ namespace jusha {
             assert(gHeapManager.find(GPU_HEAP, dvceBase) >= (mSize * (int)sizeof(T)));
 #endif
             //            cudaError_t error = cudaMemcpy(hostBase, dvcebase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
-            if (mSize){
-              cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
-              jassert(error == cudaSuccess);
-            }
+	    fromDvceToHost();
           }
       }
 
