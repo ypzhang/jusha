@@ -428,7 +428,8 @@ namespace jusha {
       
       // set the array to the same value
       void fill(const T &val) {
-	if (isGpuArray) {
+        //	if (isGpuArray) {
+      if (true) {
 	  jusha::cuda::fill(gbegin(), gend(), val);
 	  check_cuda_error("array fill", __FILE__, __LINE__);
 	} else {
@@ -604,7 +605,7 @@ namespace jusha {
 
       /*! explicitly sync to GPU buffer */
       void syncToGpu() const {
-	assert(!(isGpuValid && !isCpuValid));
+        //	assert(!(isGpuValid && !isCpuValid));
 	allocateGpuIfNecessary();
 	fromHostToDvce();
 	isGpuValid = true;
@@ -612,12 +613,52 @@ namespace jusha {
 
       /*! explicitly sync to CPU buffer */
       void syncToCpu() const {
-	assert(!(isCpuValid && !isGpuValid));
+        //	assert(!(isCpuValid && !isGpuValid));
 	allocateCpuIfNecessary();
 	fromDvceToHost();	
 	isCpuValid = true;
       }
-      
+    
+      inline void enableGpuRead() const
+      {
+	allocateGpuIfNecessary();
+        if (!isGpuValid)
+          {
+            fromHostToDvceIfNecessary();
+            isGpuValid = true;
+          }
+      }
+
+      inline void enableGpuWrite() const
+      {
+        allocateGpuIfNecessary();
+        if (!isGpuValid)
+	  fromHostToDvceIfNecessary();
+	
+	isCpuValid = false;
+	isGpuValid = true;
+      }
+
+      inline void enableCpuRead() const
+      {
+	allocateCpuIfNecessary();
+        if (!isCpuValid)
+          {
+            fromDvceToHostIfNecessary();
+            isCpuValid = true;
+          }
+      }
+
+      inline void enableCpuWrite() const
+      {
+        allocateCpuIfNecessary();
+        if (!isCpuValid)
+	  fromDvceToHostIfNecessary();
+
+	isCpuValid = true;
+	isGpuValid = false;
+      }
+  
     private:
       void init_state() {
         mSize = 0;
@@ -666,50 +707,15 @@ namespace jusha {
           }
       }
 
-      inline void enableGpuRead() const
-      {
-	allocateGpuIfNecessary();
-        if (!isGpuValid)
-          {
-            fromHostToDvceIfNecessary();
-            isGpuValid = true;
-          }
-      }
-
-      inline void enableGpuWrite() const
-      {
-        allocateGpuIfNecessary();
-        if (!isGpuValid)
-	  fromHostToDvceIfNecessary();
-	
-	isCpuValid = false;
-	isGpuValid = true;
-      }
-
-      inline void enableCpuRead() const
-      {
-	allocateCpuIfNecessary();
-        if (!isCpuValid)
-          {
-            fromDvceToHostIfNecessary();
-            isCpuValid = true;
-          }
-      }
-
-      inline void enableCpuWrite() const
-      {
-        allocateCpuIfNecessary();
-        if (!isCpuValid)
-	  fromDvceToHostIfNecessary();
-
-	isCpuValid = true;
-	isGpuValid = false;
-      }
 
       inline void fromHostToDvce() const {
-	cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
-	//        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
-	jassert(error == cudaSuccess);
+        if (mSize) {
+          jassert(hostBase);
+          jassert(dvceBase);
+          cudaError_t error = cudaMemcpy(dvceBase, hostBase, mSize* sizeof(T), cudaMemcpyHostToDevice);
+          //        std::cout << "memcpy h2d size:" << mSize*sizeof(T)  << std::endl;
+          jassert(error == cudaSuccess);
+        }
 	
       }
       
@@ -727,9 +733,11 @@ namespace jusha {
 
       inline void fromDvceToHost() const
       {
-	if (mSize){
-	  cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
-	  jassert(error == cudaSuccess);
+        if (mSize){
+          jassert(hostBase);
+          jassert(dvceBase);
+          cudaError_t error = cudaMemcpy(hostBase, dvceBase, mSize * sizeof(T),cudaMemcpyDeviceToHost);
+          jassert(error == cudaSuccess);
 	}
       }
       

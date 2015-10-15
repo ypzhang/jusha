@@ -27,6 +27,7 @@ namespace jusha {
 }
 
 #define jassert(expression)       \
+  assert(expression); \
   ((expression) ? (void) 0  \
    : jusha::jusha_assert_fail(#expression, __FILE__, __LINE__, __JUSHA_FUNC__))
 
