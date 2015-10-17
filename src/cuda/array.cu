@@ -1,6 +1,7 @@
-#include <thrust/iterator/constant_iterator.h>
 #include <thrust/transform.h>
 #include <thrust/fill.h>
+#include <thrust/iterator/constant_iterator.h>
+#include <thrust/functional.h>
 #include <algorithm>
 #include "./array.h"
 
@@ -79,7 +80,24 @@ namespace jusha {
     template void fill(float2 *, float2 *, const float2 &);
     template void fill(float4 *, float4 *, const float4 &);    
   }
-  
+
+
+  /*********************************************************************************
+   *      addConst
+   *********************************************************************************/
+  // Implementation
+  template <class T>
+  void addConst(JVector<T> &vec, T val)
+  {
+    thrust::transform(vec.gbegin(), vec.gend(),  thrust::make_constant_iterator(val),
+                      vec.gbegin(), thrust::plus<T>());
+  }
+  // Instantiation
+  template void addConst(JVector<int> &vec, int);
+  template void addConst(JVector<double> &vec, double);
+  template void addConst(JVector<long long> &vec, long long);  
+  template void addConst(JVector<float> &vec, float);
+  template void addConst(JVector<long> &vec, long);  
   /*********************************************************************************
          Next
    *********************************************************************************/

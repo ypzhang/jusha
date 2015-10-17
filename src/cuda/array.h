@@ -102,11 +102,18 @@ namespace jusha {
       // Copy Constructor
       MirroredArray(const MirroredArray<T> &rhs) 
       {
-	init_state();
-	//          printf("in copy constructore %d %d %d %d.\n", isGpuValid, gpuAllocated, isCpuValid, cpuAllocated);          
-	deep_copy(rhs);
+        init_state();
+        //          printf("in copy constructore %d %d %d %d.\n", isGpuValid, gpuAllocated, isCpuValid, cpuAllocated);          
+        deep_copy(rhs);
       }
-      
+
+      explicit MirroredArray(const std::vector<T> &rhs)
+      {
+        init_state();
+        resize(rhs.size());
+        cudaMemcpy(getGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
+      }
+
       /* Init from raw pointers
        */
       void init(const T *ptr, size_t _size) {
@@ -331,7 +338,7 @@ namespace jusha {
 
       void zero()
       {
-        if (isGpuArray) {
+        if (true) {
           cudaMemset((void *)getGpuPtr(), 0, sizeof(T)*mSize);
           check_cuda_error("after cudaMemset", __FILE__, __LINE__);
         } else {
@@ -430,11 +437,11 @@ namespace jusha {
       void fill(const T &val) {
         //	if (isGpuArray) {
       if (true) {
-	  jusha::cuda::fill(gbegin(), gend(), val);
-	  check_cuda_error("array fill", __FILE__, __LINE__);
-	} else {
-	  std::fill(getPtr(), getPtr()+size(), val);
-	}
+        jusha::cuda::fill(gbegin(), gend(), val);
+        check_cuda_error("array fill", __FILE__, __LINE__);
+      } else {
+        std::fill(getPtr(), getPtr()+size(), val);
+      }
       }
       
       // use sequence in thrust
@@ -817,6 +824,9 @@ namespace jusha {
   // norm 
   template <class T>
     void norm(const JVector<T> &vec);
+
+  template <class T>
+  void addConst(JVector<T> &vec, T val);
   
 } // jusha
 

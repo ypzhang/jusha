@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include "./cuda_config.h"
 
 namespace jusha {
@@ -39,13 +40,28 @@ namespace jusha {
       if (lane==0) shared[wid]=val; // Write reduced value to shared memory
       
       __syncthreads();              // Wait for all partial reductions
-      
+
       //read from shared memory only if that warp existed
+#if 0 // this does not work for some reason
       val = (threadIdx.x < blockDim.x / warpSize) ? shared[lane] : 0;
-      
+      if (blockIdx.x == 0 && threadIdx.x < blockDim.x/warpSize)
+        printf("************** reading shm reduce %f\n", val);
       if (wid==0) val = warpReduceSum(val); //Final reduce within first warp
-      
       return val;
+#else
+      // do it sequentially
+      if (threadIdx.x == 0) {
+        for (int i = 1; i < (blockDim.x + warpSize-1)/warpSize; i++)
+          val += shared[i];
+        shared[0] = val;
+      }
+      __syncthreads();
+      if (threadIdx.x != 0)
+        val = shared[0];
+      // if (threadIdx.x == 0)
+      //   printf("*** final val is %f.\n", shared[0]);
+      return val;
+#endif
     }
 
 

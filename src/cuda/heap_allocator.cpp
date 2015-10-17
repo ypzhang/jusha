@@ -3,7 +3,7 @@
 #include "heap_allocator.h"
 
 namespace jusha {
-  size_t g_sub_bin_size = 4;
+  size_t g_sub_bin_size = 8;
 
   size_t g_min_block_shift = 8;
   size_t g_min_block_bsize = (1<<8);
