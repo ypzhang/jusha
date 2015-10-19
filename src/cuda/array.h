@@ -338,7 +338,7 @@ namespace jusha {
 
       void zero()
       {
-        if (true) {
+        if (isGpuArray) {
           cudaMemset((void *)getGpuPtr(), 0, sizeof(T)*mSize);
           check_cuda_error("after cudaMemset", __FILE__, __LINE__);
         } else {
@@ -435,13 +435,13 @@ namespace jusha {
       
       // set the array to the same value
       void fill(const T &val) {
-        //	if (isGpuArray) {
-      if (true) {
-        jusha::cuda::fill(gbegin(), gend(), val);
-        check_cuda_error("array fill", __FILE__, __LINE__);
-      } else {
-        std::fill(getPtr(), getPtr()+size(), val);
-      }
+        if (isGpuArray) {
+          //      if (true) {
+          jusha::cuda::fill(gbegin(), gend(), val);
+          check_cuda_error("array fill", __FILE__, __LINE__);
+        } else {
+          std::fill(getPtr(), getPtr()+size(), val);
+        }
       }
       
       // use sequence in thrust
@@ -628,11 +628,11 @@ namespace jusha {
     
       inline void enableGpuRead() const
       {
-	allocateGpuIfNecessary();
+        allocateGpuIfNecessary();
         if (!isGpuValid)
           {
             fromHostToDvceIfNecessary();
-            isGpuValid = true;
+            setGpuAvailable();
           }
       }
 
@@ -666,6 +666,11 @@ namespace jusha {
 	isGpuValid = false;
       }
   
+      void setGpuAvailable() const {
+        isGpuValid = true;
+      }
+
+
     private:
       void init_state() {
         mSize = 0;

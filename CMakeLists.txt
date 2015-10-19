@@ -78,7 +78,8 @@ set(CUDA_BLOCKSIZE 256 CACHE STRING "CUDA block size.")
 
 # CUDA architecture options.
 #set(GENCODE_SM35 "-gencode=arch=compute_35,code=sm_35")
-#set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
+set(GENCODE_SM50 "-gencode=arch=compute_50,code=sm_50")
+set(GENCODE_SM52 "-gencode=arch=compute_52,code=sm_52")
 set(GENCODE_SM30 "-gencode=arch=compute_30,code=sm_30")
 set(GENCODE_SM37 "-gencode=arch=compute_37,code=sm_37")
 set(GENCODE_SM20 "-gencode=arch=compute_20,code=sm_20")
@@ -194,9 +195,9 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 #if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
   cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
-	OPTIONS ${GENCODE_SM30} ${GENCODE_SM37} "-std=c++11" # "--relaxed-constexpr" # "--resource-usage" "-v"
-	RELEASE --use_fast_math;-g;-O3; ${GENCODE_SM37} ${GENCODE_SM30}
-	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM37} ${GENCODE_SM30}
+	OPTIONS ${GENCODE_SM30} ${GENCODE_SM37} ${GENCODE_SM52} "-std=c++11" # "--relaxed-constexpr" # "--resource-usage" "-v"
+	RELEASE --use_fast_math;-g;-O3; ${GENCODE_SM37} ${GENCODE_SM30}  ${GENCODE_SM52} 
+	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM37} ${GENCODE_SM30}  ${GENCODE_SM52} 
     ) # "-Xcompiler ,\"-std=c++11\"")
 #  target_link_library(jusha jusha_c jusha_cu)
 #else()
