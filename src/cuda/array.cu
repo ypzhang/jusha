@@ -67,6 +67,12 @@ namespace jusha {
     void fill(T *begin, T *end, const T & val) {
       thrust::fill(begin, end, val);      
     }
+
+    template <typename T>
+    void fill(thrust::device_ptr<T> begin, thrust::device_ptr<T> end, const T&val)
+    {
+      thrust::fill(begin, end, val);
+    }
     
     // // Instantiation
     // template void MirroredArray<double>::fill(const double &ratio);
@@ -79,6 +85,13 @@ namespace jusha {
     template void fill(long long*, long long*, const long long &);
     template void fill(float2 *, float2 *, const float2 &);
     template void fill(float4 *, float4 *, const float4 &);    
+
+    template void fill(thrust::device_ptr<double> begin, thrust::device_ptr<double> end, const double&val);
+    template void fill(thrust::device_ptr<float> begin, thrust::device_ptr<float> end, const float&val);
+    template void fill(thrust::device_ptr<int> begin, thrust::device_ptr<int> end, const int&val);
+    template void fill(thrust::device_ptr<float2> begin, thrust::device_ptr<float2> end, const float2&val);
+    template void fill(thrust::device_ptr<float4> begin, thrust::device_ptr<float4> end, const float4&val);
+
   }
 
 
