@@ -17,6 +17,7 @@ cuda_add_executable(jutest  src/unit_test.cpp
 			    src/foreach_test.cu
 			    src/foreach_block_test.cu
 			    src/foreach_shm_test.cu
+	src/intrinsic_test.cu
 	src/allocator_test.cpp
 	src/distri_obj_test.cpp
 	OPTIONS ${GENCODE_SM37};${GENCODE_SM30}; "-std=c++11" 
