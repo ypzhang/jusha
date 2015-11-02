@@ -31,7 +31,7 @@ namespace jusha {
     __inline__ __device__
     T blockReduceSum(T val) {
       assert(blockDim.x <= (32*32));
-      static __shared__ int shared[32]; // Shared mem for 32 partial sums
+      static __shared__ T shared[32]; // Shared mem for 32 partial sums
       int lane = threadIdx.x % warpSize;
       int wid = threadIdx.x / warpSize;
       

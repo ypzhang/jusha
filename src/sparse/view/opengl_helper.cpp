@@ -1,4 +1,3 @@
-  
 #if defined (__APPLE__) || defined(MACOSX)
 #include <GLFW/glfw3.h>
 #else
@@ -110,3 +109,4 @@ namespace yac {
 
     }
 }
+

@@ -31,7 +31,6 @@ endif (APPLE)
 
 find_library (GLFW_LIB_LIBRARIES  NAMES glfw glfw3
   PATHS /opt/local/lib /usr/local /usr/local/lib
-  REQUIRED
 )
 message(STATUS "Found glfw library @ ${GLFW_LIB_LIBRARIES}")
 set (CUDA_PROPAGATE_HOST_FLAGS OFF)
@@ -46,7 +45,7 @@ if(NOT OPENGL_FOUND)
     message(ERROR " OPENGL not found!")
 else ()
 	if (UNIX)
-	    set(GL_LIBRARIES GL GLU X11 Xxf86vm Xrandr Xi Xcursor  Xinerama)
+	    set(GL_LIBRARIES GLU X11 Xxf86vm Xrandr Xi Xcursor  Xinerama)
 	endif()
 	if (APPLE)
 	    set(GL_LIBRARIES ${OPENGL_LIBRARIES})
@@ -138,7 +137,7 @@ set(CPP_SRC_LIST
     src/sparse/mmio.cpp
     src/sparse/csr_matrix.cpp
     
-    src/sparse/view/opengl_helper.cpp
+
 	src/sparse/parser/su2_mesh_parser.cpp
 
     
@@ -154,8 +153,10 @@ set(CU_SRC_LIST
 
 
 #    src/cuda/dummy.cu
-
-	src/sparse/view/2d_viewer.cu
+#if(GLFW_LIB_LIBRARIES)
+#	src/sparse/view/2d_viewer.cu
+#    src/sparse/view/opengl_helper.cpp
+#endif
 )
 
 # Headers are here just so CMake will put them in project files.
@@ -184,9 +185,11 @@ set(HEADERS_LIST
 	src/sparse/solver/precond.h
     
 	src/sparse/parser/su2_mesh_parser.h
+#if(GLFW_LIB_LIBRARIES)
+#	src/sparse/view/2d_viewer.h
+#	src/sparse/view/opengl_helper.h
+#endif
 
-	src/sparse/view/2d_viewer.h
-	src/sparse/view/opengl_helper.h
 )
 
 # Must set this because size_t etc is shared between NVCC and Host - only really matters on Windows
@@ -213,7 +216,10 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 
 target_link_libraries(jusha ${CUDA_curand_LIBRARY})
 #include_directories(/opt/local/lib)
+if (GLFW_LIB_LIBRARIES)
 target_link_libraries(jusha ${GLFW_LIB_LIBRARIES})
+endif()
+#
 #      message(STATUS, "hdf5 lib names ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES}")
 #      message(STATUS "hdf5 high level ${HDF5HL_LIBRARY}")
 #target_link_libraries(jusha ${OPENGL_LIBRARIES}) #  ${HDF5_LIBRARIES} ${HDF5HL_LIBRARY})

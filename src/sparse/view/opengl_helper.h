@@ -3,3 +3,4 @@
 namespace yac {
   bool initGL(int *argc, char **argv);
 }
+
