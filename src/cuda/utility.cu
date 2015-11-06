@@ -1,6 +1,8 @@
 #include <iostream>
 
 namespace jusha {
+  void check_cuda_error_always(const char *kernelname, const char *file, int line_no, cudaStream_t stream );
+
   void check_cuda_error(const char *kernelname, const char *file, int line_no, cudaStream_t stream )
   {
 #ifdef DEBUG

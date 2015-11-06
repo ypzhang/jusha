@@ -1,5 +1,7 @@
 #pragma once
 #include <cassert>
+#include <cub/cub.cuh>
+
 #include "./cuda_config.h"
 
 namespace jusha {
@@ -64,10 +66,59 @@ namespace jusha {
 #endif
     }
 
-
     /*!*****************************************************************
      *                                 Scan
      ******************************************************************/
+
+    /*! Block level in-place scan over a range */
+    template <class T, class Op, int BS, bool exclusive>
+    __inline__ __device__
+    void blockScan(T *start, T *end) {
+      static __shared__ T scan_val[BS];
+      assert(blockDim.x == BS);
+      Op op;
+      int N = end - start;
+      T carry_out = T();
+      T outval;
+      for (int id = threadIdx.x;  id < (N + BS-1)/BS * BS; id+=BS) {
+        T val;
+        if (id < N)
+          val = start[id];
+        if (threadIdx.x == 0)  {
+          val = op(val, carry_out);
+        }
+        scan_val[threadIdx.x] = val;
+        __syncthreads();
+        if (threadIdx.x >=  1)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x -  1]); __syncthreads();
+        if (threadIdx.x >=  2)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x -  2]); __syncthreads();
+        if (threadIdx.x >=  4)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x -  4]); __syncthreads();
+        if (threadIdx.x >=  8)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x -  8]); __syncthreads();
+        if (threadIdx.x >= 16)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x - 16]); __syncthreads();
+        if (threadIdx.x >= 32)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x - 32]); __syncthreads();
+        if (threadIdx.x >= 64)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x - 64]); __syncthreads();
+        if (threadIdx.x >= 128)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x - 128]); __syncthreads();
+        if (threadIdx.x >= 256)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x - 256]); __syncthreads();
+        if (threadIdx.x >= 512)  scan_val[threadIdx.x] = op(scan_val[threadIdx.x], scan_val[threadIdx.x - 512]); __syncthreads();
+        if (!exclusive)
+          outval = scan_val[threadIdx.x];
+        else {
+          if (threadIdx.x == 0) {
+            outval = carry_out;
+          }
+          else
+            outval = scan_val[threadIdx.x-1];
+        }
+        carry_out = scan_val[BS-1];
+
+        if (id < N) {
+          start[id] = outval;
+        }
+        
+      }
+    }
+
+    /*********** sort *
+     */
 
   } // cuda
 } // jusha

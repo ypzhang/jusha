@@ -21,8 +21,8 @@ cuda_add_executable(jutest  src/unit_test.cpp
 	src/allocator_test.cpp
 	src/distri_obj_test.cpp
 	OPTIONS ${GENCODE_SM37};${GENCODE_SM30}; "-std=c++11" 
-	RELEASE --use_fast_math;-g;-O3; ${GENCODE_SM37};${GENCODE_SM30}
-	DEBUG -g;-O0;-DDEBUG;${GENCODE_SM37};${GENCODE_SM30}
+	RELEASE --use_fast_math;-g;-O3; ${GENCODE_SM37};${GENCODE_SM30} ${GENCODE_SM52} 
+	DEBUG -g;-O0;-DDEBUG;${GENCODE_SM37};${GENCODE_SM30} ${GENCODE_SM52} 
 )
 
 target_link_libraries(jutest jusha)
