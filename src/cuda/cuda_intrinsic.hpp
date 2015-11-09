@@ -1,6 +1,5 @@
 #pragma once
 #include <cassert>
-#include <cub/cub.cuh>
 
 #include "./cuda_config.h"
 
@@ -27,13 +26,15 @@ namespace jusha {
         val += __shfl_xor(val, mask);
       return val;
     }
-    
-    /* block level reduction */
+
+
+    /* block reduce with provided shared memory
+       shared memory should be greater than 32
+     */
     template <class T>
     __inline__ __device__
-    T blockReduceSum(T val) {
-      assert(blockDim.x <= (32*32));
-      static __shared__ T shared[32]; // Shared mem for 32 partial sums
+    T blockReduceSum(T val, T *shared) {
+      //      static __shared__ T shared[32]; // Shared mem for 32 partial sums
       int lane = threadIdx.x % warpSize;
       int wid = threadIdx.x / warpSize;
       
@@ -64,6 +65,15 @@ namespace jusha {
       //   printf("*** final val is %f.\n", shared[0]);
       return val;
 #endif
+    }
+
+    /* block level reduction */
+    template <class T>
+    __inline__ __device__
+    T blockReduceSum(T val) {
+      assert(blockDim.x <= (32*32));
+      static __shared__ T shared[32]; // Shared mem for 32 partial sums
+      return blockReduceSum(val, shared);
     }
 
     /*!*****************************************************************

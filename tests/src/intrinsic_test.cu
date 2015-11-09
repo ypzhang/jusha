@@ -77,8 +77,8 @@ TEST_CASE( "BlockSort", "[sort]" ) {
     sort_ptr[i] = (to_sort.size()-i) * 2;
 
   sort_kernel<<<1, 1024>>>(to_sort.getGpuPtr(), sort_done.getGpuPtr(), to_sort.size());
-  sort_done.print("sort result", to_sort.size());
-  //  REQUIRE((to_scan.size()-1) == to_scan[479]);
+  //  sort_done.print("sort result", to_sort.size());
+  REQUIRE((sort_done.size()*2) == sort_done[479]);
 
   {
   cuda::MirroredArray<float> to_sort(56000);
@@ -88,8 +88,8 @@ TEST_CASE( "BlockSort", "[sort]" ) {
     sort_ptr[i] = (to_sort.size()-i) * 2;
 
   sort_kernel<<<1, 1024>>>(to_sort.getGpuPtr(), sort_done.getGpuPtr(), to_sort.size());
-  sort_done.print("sort result", to_sort.size());
-  //  REQUIRE((to_scan.size()-1) == to_scan[479]);
+  //  sort_done.print("sort result", to_sort.size());
+  REQUIRE((to_sort.size()*2) == sort_done[55999]);
   }
 
   }
