@@ -84,6 +84,18 @@ namespace jusha {
         destroy();
       }
       
+      void setGpuArray() {
+        isGpuArray = true;
+      }
+
+      void setCpuArray() {
+        isGpuArray = false;
+      }
+
+      bool IsGpuArray() const {
+        return isGpuArray;
+      }
+      
       void destroy() {
         if (dvceBase && gpuNeedToFree) {
 #ifdef USE_SHARED_PTR
