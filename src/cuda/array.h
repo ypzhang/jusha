@@ -346,6 +346,18 @@ namespace jusha {
         }
       }
 
+      /*! return the pointer without changing the internal state */
+      T *getRawPtr() {
+        allocateCpuIfNecessary();
+        return hostBase;
+      }
+
+      /*! return the gpu pointer without changing the internal state */
+      T *getRawGpuPtr() {
+        allocateGpuIfNecessary();
+        return dvceBase;
+      }
+
 
       const T *getReadOnlyPtr() const
       {
