@@ -126,6 +126,14 @@ namespace jusha {
         cudaMemcpy(getGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
       }
 
+      void operator=(const std::vector<T> &rhs)
+      {
+        init_state();
+        resize(rhs.size());
+        cudaMemcpy(getGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
+      }
+
+
       /* Init from raw pointers
        */
       void init(const T *ptr, size_t _size) {
@@ -192,19 +200,20 @@ namespace jusha {
               cudaMemcpy(getGpuPtr(), src.getReadOnlyGpuPtr(), sizeof(T)*mSize, cudaMemcpyDeviceToDevice);
             //            printf("deep copy src gpuvalid %d my gpuvalid %d %p size %zd.\n", src.isGpuValid, isGpuValid,dvceBase, src.size());
           }
-        else if (isCpuValid)
+        else if (src.isCpuValid)
           {
             if (src.size())
               memcpy(getPtr(), src.getReadOnlyPtr(), sizeof(T)*mSize);
           }
+        isGpuArray = src.isGpuArray;
       }
 
       bool GpuHasLatest() const {
-	return isGpuValid;
+        return isGpuValid;
       }
 
       bool CpuHasLatest() const {
-	return isCpuValid;
+        return isCpuValid;
       }
       
       // deep copy to
@@ -707,6 +716,7 @@ namespace jusha {
         isGpuValid = false;
         gpuAllocated = false;
         cpuAllocated = false;
+        isGpuArray = false;
       }
       
       inline void allocateCpuIfNecessary()  const

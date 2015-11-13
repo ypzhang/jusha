@@ -10,6 +10,9 @@
 #include "utility.h"
 using namespace std;
 
+#define USE_CUDA_ALLOCATOR
+//#undef USE_CUDA_ALLOCATOR
+
 namespace jusha {
   HeapManager gHeapManager;
   int HeapManager::max_device_ids = 32;
