@@ -12,7 +12,6 @@ using namespace std;
 
 #define USE_CUDA_ALLOCATOR
 //#undef USE_CUDA_ALLOCATOR
-
 namespace jusha {
   HeapManager gHeapManager;
   int HeapManager::max_device_ids = 32;
@@ -25,8 +24,12 @@ namespace jusha {
   {
     if (mCpuMemoryTracker.size() > 0)
       std::cout << "memory leak for cpu heap!!!" << std::endl;
-    if (mGpuMemoryTracker.size() > 0)
+    if (mGpuMemoryTracker.size() > 0) {
       std::cout << "memory leak for Gpu heap!!!" << std::endl;
+      for (auto i = mGpuMemoryTracker.begin(); i != mGpuMemoryTracker.end(); i++) {
+        printf("Memory %p size %d were not properly freed.\n", i->first, i->second);
+      }
+    }
 #ifdef _DEBUG
     std::cout << "Maximal GPU usage : " << (float)maxGpuUsage/1000000 << "M bytes" << std::endl;
 #endif
@@ -56,6 +59,10 @@ namespace jusha {
         cudaMemGetInfo(&free, &total);
         check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
         cudaMalloc(addr, size);
+#ifdef _DEBUG
+        count++;
+        printf("alocating GPU %p for size %ld count = %d\n", *addr, size, count);
+#endif
         if (size && (*addr == 0))  {
           printf("allocating memory size %ld failed, total %ld, free %ld\n", size, total, free);
         }
@@ -65,13 +72,14 @@ namespace jusha {
         assert(allocator);
         *addr = allocator->allocate(size);
 #endif
-	if (addr == 0) {
-	  size_t free, total;
-	  cudaMemGetInfo(&free, &total);
-	  fprintf(stderr, "Failed to allocate memory size %f Kbytes, free memory %f Kbytes, total %f Kbytes.\n",
-		  float(size)/1000., float(free)/1000., float(total)/1000.);
-	}
+        if (addr == 0) {
+          size_t free, total;
+          cudaMemGetInfo(&free, &total);
+          fprintf(stderr, "Failed to allocate memory size %f Kbytes, free memory %f Kbytes, total %f Kbytes.\n",
+                  float(size)/1000., float(free)/1000., float(total)/1000.);
+        }
 #ifdef _DEBUG
+        
         mGpuMemoryTracker.insert( pair<void *, int>(*addr, size));
         curGpuUsage += size;
         maxGpuUsage = maxGpuUsage > curGpuUsage? maxGpuUsage: curGpuUsage;
@@ -136,6 +144,7 @@ namespace jusha {
     else if (type == GPU_HEAP)
       {
 #ifdef _DEBUG
+        printf("free memory %p\n", addr);
         std::map<void *, int>::iterator it;
         it = mGpuMemoryTracker.find(addr);
         assert(it != mGpuMemoryTracker.end());

@@ -81,6 +81,7 @@ namespace jusha {
       // }      
 
       ~MirroredArray() {
+        //        printf("inside destructor size %ld %p.\n", mSize, dvceBase);
         destroy();
       }
       
@@ -270,7 +271,7 @@ namespace jusha {
 #endif
         if (_size <= mCapacity)
           {
-            // free memory 
+            // free memory if resize to zero
             if (_size == 0 && mSize > 0) {
               destroy();
             }
@@ -352,6 +353,8 @@ namespace jusha {
 	    // if (dvceBase)
 	    //   jusha::cuda::fill(dvceBase + mSize, dvceBase + _size, T());
             mSize = _size;
+            gpuAllocated = dvceBase == 0? false: true;
+            cpuAllocated = hostBase == 0? false: true;
             mCapacity = _size;
 #endif
           }

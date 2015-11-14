@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 
+//#define _DEBUG
 namespace jusha {
 /* a heap manager that helps debugging memory alloc/free bugs */
 typedef enum{
@@ -31,10 +32,13 @@ class HeapManager{
   std::map <void *, int> mCpuMemoryTracker;
   // for multiple GPUs
   std::vector<HeapAllocator *> mGpuHeapAllocators;
-  /* int maxCpuUsage; */
-  /* int maxGpuUsage; */
-  /* int curCpuUsage; */
-  /* int curGpuUsage; */
+#ifdef _DEBUG
+  int count = 0;
+  int maxCpuUsage = 0;
+  int maxGpuUsage = 0;
+  int curCpuUsage = 0;
+  int curGpuUsage = 0;
+#endif
 };
 
 }

@@ -117,3 +117,21 @@ TEST_CASE( "VecMinus", "[array]" ) {
 }
 
 
+TEST_CASE( "VecResize", "[array]" ) {
+  int size1 = 257;
+  JVector<int> v0(size1);
+  v0.fill(10);
+  v0.setGpuArray();
+  v0.resize(500);
+  REQUIRE(v0[0] == 10);
+  v0.resize(1000);
+  REQUIRE(v0[size1-1] == 10);
+}
+
+TEST_CASE( "VecResize2", "[array]" ) {
+  int size1 = 257;
+  JVector<int> v0;
+  v0.resize(size1);
+}
+
+
