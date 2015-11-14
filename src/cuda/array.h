@@ -48,7 +48,9 @@ namespace jusha {
         isGpuValid(false),
         gpuAllocated(false),
     cpuAllocated(false),
-	isGpuArray(false)
+	isGpuArray(false),
+    gpuNeedToFree(true),
+    cpuNeedToFree(true)
       {
       }
 
@@ -129,7 +131,7 @@ namespace jusha {
 
       void operator=(const std::vector<T> &rhs)
       {
-        init_state();
+        //        init_state();
         resize(rhs.size());
         cudaMemcpy(getGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
       }

@@ -23,9 +23,9 @@ namespace jusha {
   HeapManager::~HeapManager()
   {
     if (mCpuMemoryTracker.size() > 0)
-      std::cout << "memory leak for cpu heap!!!" << std::endl;
+      std::cout << "memory leak for cpu heap!!! count " << mCpuMemoryTracker.size() << std::endl;
     if (mGpuMemoryTracker.size() > 0) {
-      std::cout << "memory leak for Gpu heap!!!" << std::endl;
+      std::cout << "memory leak for Gpu heap!!! count " << mGpuMemoryTracker.size() << std::endl;
       for (auto i = mGpuMemoryTracker.begin(); i != mGpuMemoryTracker.end(); i++) {
         printf("Memory %p size %d were not properly freed.\n", i->first, i->second);
       }
