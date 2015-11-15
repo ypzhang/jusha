@@ -45,13 +45,6 @@ namespace jusha {
       __syncthreads();              // Wait for all partial reductions
 
       //read from shared memory only if that warp existed
-#if 0 // this does not work for some reason
-      val = (threadIdx.x < blockDim.x / warpSize) ? shared[lane] : 0;
-      if (blockIdx.x == 0 && threadIdx.x < blockDim.x/warpSize)
-        printf("************** reading shm reduce %f\n", val);
-      if (wid==0) val = warpReduceSum(val); //Final reduce within first warp
-      return val;
-#else
       // do it sequentially
       if (threadIdx.x == 0) {
         for (int i = 1; i < (blockDim.x + warpSize-1)/warpSize; i++)
@@ -64,7 +57,6 @@ namespace jusha {
       // if (threadIdx.x == 0)
       //   printf("*** final val is %f.\n", shared[0]);
       return val;
-#endif
     }
 
     /* block level reduction */
@@ -74,6 +66,29 @@ namespace jusha {
       assert(blockDim.x <= (32*32));
       static __shared__ T shared[32]; // Shared mem for 32 partial sums
       return blockReduceSum(val, shared);
+    }
+
+
+    /* block min with provided shared memory
+       only the first thread returns the valid value
+     */
+    template <class T>
+    __inline__ __device__
+    T blockMinSum(T val, int id, T *shared_val, int *shared_id) {
+      shared_val[threadIdx.x] = val;
+      shared_id [threadIdx.x] = id;
+      __syncthreads();
+      for (int stride = blockDim.x/2; stride > 0; stride /= 2) {
+        if (threadIdx.x < stride)
+          if (val > shared_val[threadIdx.x + stride]) {
+            val = shared_val[threadIdx.x + stride];
+            id = shared_id[threadIdx.x + stride];
+            shared_val[threadIdx.x] = val;
+            shared_id [threadIdx.x] = id;
+          }
+        __syncthreads();
+      }
+      return val;
     }
 
     /*!*****************************************************************
