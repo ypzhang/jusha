@@ -94,12 +94,11 @@ namespace jusha {
     /*!*****************************************************************
      *                                 Scan
      ******************************************************************/
-
     /*! Block level in-place scan over a range */
     template <class T, class Op, int BS, bool exclusive>
     __inline__ __device__
-    void blockScan(T *start, T *end) {
-      static __shared__ T scan_val[BS];
+    void blockScan(T *start, T *end, T *scan_val) {
+      //      static __shared__ T scan_val[BS];
       assert(blockDim.x == BS);
       Op op;
       int N = end - start;
@@ -140,6 +139,15 @@ namespace jusha {
         }
         
       }
+    }
+
+
+    /*! Block level in-place scan over a range */
+    template <class T, class Op, int BS, bool exclusive>
+    __inline__ __device__
+    void blockScan(T *start, T *end) {
+      static __shared__ T scan_val[BS];
+      blockScan<T, Op, BS, exclusive>(start, end, scan_val);
     }
 
     /*********** sort *

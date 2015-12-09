@@ -365,10 +365,10 @@ namespace jusha {
       void zero()
       {
         if (isGpuArray) {
-          cudaMemset((void *)getGpuPtr(), 0, sizeof(T)*mSize);
+          cudaMemset((void *)getOverwriteGpuPtr(), 0, sizeof(T)*mSize);
           check_cuda_error("after cudaMemset", __FILE__, __LINE__);
         } else {
-          memset((void *)getPtr(), 0, sizeof(T)*mSize);
+          memset((void *)getOverwritePtr(), 0, sizeof(T)*mSize);
         }
       }
 
@@ -411,6 +411,21 @@ namespace jusha {
         return dvceBase;
       }
   
+      T *getOverwritePtr() {
+        allocateCpuIfNecessary();
+        isCpuValid = true;
+        isGpuValid = false;
+        return hostBase;
+      }
+
+      T *getOverwriteGpuPtr() {
+        allocateGpuIfNecessary();
+        isCpuValid = false;
+        isGpuValid = true;
+        return dvceBase;
+      }
+
+
       T &operator[](int index)
         {
           assert(index < mSize);
@@ -475,10 +490,10 @@ namespace jusha {
       void fill(const T &val) {
         if (isGpuArray) {
           //      if (true) {
-          jusha::cuda::fill(gbegin(), gend(), val);
+          jusha::cuda::fill(owbegin(), owend(), val);
           check_cuda_error("array fill", __FILE__, __LINE__);
         } else {
-          std::fill(getPtr(), getPtr()+size(), val);
+          std::fill(getOverwritePtr(), getOverwritePtr()+size(), val);
         }
       }
       
@@ -616,6 +631,15 @@ namespace jusha {
         return sorted;
       }
 
+      void invalidateGpu() {
+        isGpuValid = false;
+      }
+
+
+      void invalidateCpu() {
+         isCpuValid = false;
+      }
+
 
     inline typename thrust::device_ptr<T> gbegin()
     //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer)); }
@@ -631,6 +655,20 @@ namespace jusha {
       enableGpuWrite();
       return thrust::device_ptr<T>(getGpuPtr()+mSize);
     }
+
+    inline typename thrust::device_ptr<T> owbegin()
+    //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer)); }
+    { 
+      return thrust::device_ptr<T>(getOverwriteGpuPtr()); 
+    }
+
+    /*! \brief Return the last iterator (the first invalid iterator) in the srt::vector */
+    inline typename thrust::device_ptr<T> owend()
+    //{ return thrust::retag<srt_thrust_tag>(thrust::device_ptr<T>(data_pointer+m_size)); }
+    { 
+      return thrust::device_ptr<T>(getOverwriteGpuPtr()+mSize);
+    }
+
 
     /*! \brief Return the iterator to the first element in the srt::vector */
     inline typename thrust::device_ptr<T> gbegin() const
