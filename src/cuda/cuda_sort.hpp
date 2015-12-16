@@ -415,9 +415,14 @@ __device__ void blockSort(T *input, T *output, int size)
 			// Create a new pivot for the sequence
 			// Try to optimize this for your input distribution
 			// if you have some information about it
+#if 0
 			T mip = min(min(data[from],data[to-1]),data[(from+to)/2]);
 			T map = max(max(data[from],data[to-1]),data[(from+to)/2]);
 			pivot = min(max(mip/2+map/2,mip),map);
+#else
+            int pivot_index = (to+from)/2;
+            pivot = data[pivot_index];
+#endif
             //            printf("first %d last %d med %d.\n", data[from].key, data[to-1].key, data[(from+to)/2].key);
             //            printf("pivot is %d mip %d map %d.\n", pivot.key, mip.key, map.key);
 		}

@@ -78,7 +78,7 @@ namespace jusha {
     // template void MirroredArray<double>::fill(const double &ratio);
     // template void MirroredArray<float>::fill(const float &ratio);
     // template void MirroredArray<int>::fill(const int &ratio);
-
+    template void fill(bool *, bool *, const bool &);
     template void fill(double *, double *, const double &);
     template void fill(float *, float *, const float &);
     template void fill(int *, int *, const int &);
@@ -86,6 +86,7 @@ namespace jusha {
     template void fill(float2 *, float2 *, const float2 &);
     template void fill(float4 *, float4 *, const float4 &);    
 
+    template void fill(thrust::device_ptr<bool> begin, thrust::device_ptr<bool> end, const bool&val);
     template void fill(thrust::device_ptr<double> begin, thrust::device_ptr<double> end, const double&val);
     template void fill(thrust::device_ptr<float> begin, thrust::device_ptr<float> end, const float&val);
     template void fill(thrust::device_ptr<int> begin, thrust::device_ptr<int> end, const int&val);

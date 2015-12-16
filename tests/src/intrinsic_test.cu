@@ -67,6 +67,23 @@ TEST_CASE( "BlockScan", "[scan]" ) {
     jusha::cuda::blockSort<T, 1024>(sort_in, sort_out,  size);
   }
 
+static void sort_test(int size) {
+  cuda::MirroredArray<unsigned int> to_sort(size);
+  cuda::MirroredArray<unsigned int> sort_done(size);
+  to_sort.randomize();
+  sort_kernel<<<1, 1024>>>(to_sort.getGpuPtr(), sort_done.getGpuPtr(), to_sort.size());
+  REQUIRE(sort_done.isFSorted(0, sort_done.size() == true));
+}
+
+TEST_CASE( "BlockSortCorner", "[random]" ) { 
+    for (int size = 0; size != 200; size++) {
+      sort_test(size);
+    }
+    for (int size = 201; size < 21000000; size*=10) {
+      sort_test(size);
+    }
+
+  }
 
 TEST_CASE( "BlockSort", "[sort]" ) { 
   {

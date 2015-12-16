@@ -480,7 +480,7 @@ namespace jusha {
       void randomize() 
       {
         RandomWrapper<CURAND_RNG_PSEUDO_MTGP32, T> rng;
-        rng.apply(getGpuPtr(), mSize);
+        rng.apply(getOverwriteGpuPtr(), mSize);
       }
 
       // scale the array
