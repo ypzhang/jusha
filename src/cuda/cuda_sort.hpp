@@ -491,6 +491,11 @@ __device__ void blockSort(T *input, T *output, int size)
             //                       printf("lblock %d rblock %d.\n", lblock[BLOCK_SIZE], rblock[BLOCK_SIZE]);
             if (lblock[BLOCK_SIZE] == 0 && rblock[BLOCK_SIZE] == 0)
               bi--;
+            else if (lblock[BLOCK_SIZE] == 0){
+              beg[bi] = to - rblock[BLOCK_SIZE];
+            } else if (rblock[BLOCK_SIZE] == 0) {
+              end[bi] = from + lblock[BLOCK_SIZE];
+            }
             else {
               if(lblock[BLOCK_SIZE]<rblock[BLOCK_SIZE])
                 {
