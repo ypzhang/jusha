@@ -446,7 +446,7 @@ __device__ void blockSort(T *input, T *output, int size)
 					ll++;
 				else
 				// or a lower
-                  //				if(d>pivot)
+                  if(d>pivot)
 					lr++;
 			}
 		}
@@ -462,7 +462,7 @@ __device__ void blockSort(T *input, T *output, int size)
 				ll++;
 			else
 			// or a lower
-              //			if(d>pivot)
+              if(d>pivot)
 				lr++;
 		}
 
@@ -488,23 +488,27 @@ __device__ void blockSort(T *input, T *output, int size)
 
 			// We need to place the smallest object on top of the stack
 			// to ensure that we don't run out of stack space
-            //            printf("lblock %d rblock %d.\n", lblock[BLOCK_SIZE], rblock[BLOCK_SIZE]);
-			if(lblock[BLOCK_SIZE]<rblock[BLOCK_SIZE])
-			{
-				beg[bi+1]=beg[bi];
-				beg[bi]=to-rblock[BLOCK_SIZE];
-				end[bi+1]=from+lblock[BLOCK_SIZE];
-
-			}
-			else
-			{
-				end[bi+1]=end[bi];
-				end[bi]=from+lblock[BLOCK_SIZE];
-				beg[bi+1]=to-rblock[BLOCK_SIZE];
-			}
-			// Increment the stack pointer
-			bi++;
-            assert(beg[bi] < end[bi]);  // does not work for this case 
+            //                       printf("lblock %d rblock %d.\n", lblock[BLOCK_SIZE], rblock[BLOCK_SIZE]);
+            if (lblock[BLOCK_SIZE] == 0 && rblock[BLOCK_SIZE] == 0)
+              bi--;
+            else {
+              if(lblock[BLOCK_SIZE]<rblock[BLOCK_SIZE])
+                {
+                  beg[bi+1]=beg[bi];
+                  beg[bi]=to-rblock[BLOCK_SIZE];
+                  end[bi+1]=from+lblock[BLOCK_SIZE];
+                  
+                }
+              else
+                {
+                  end[bi+1]=end[bi];
+                  end[bi]=from+lblock[BLOCK_SIZE];
+                  beg[bi+1]=to-rblock[BLOCK_SIZE];
+                }
+              // Increment the stack pointer
+              bi++;
+              assert(beg[bi] < end[bi]);  // does not work for this case 
+            }
             //            if (tx == 0)
             //              printf("bi is now %d beg %d end %d size %d block %d\n", bi, beg[bi], end[bi], end[bi]-beg[bi], blockIdx.x);
             /*            assert(bi < 32);
@@ -528,7 +532,7 @@ __device__ void blockSort(T *input, T *output, int size)
 				if(d<pivot)
 					data2[x--] = d;
 				else
-                  //				if(d>pivot)
+                  if(d>pivot)
 					data2[y++] = d;
 			}
 		}
@@ -542,7 +546,7 @@ __device__ void blockSort(T *input, T *output, int size)
 			if(d<pivot)
 				data2[x--] = d;
 			else
-              //			if(d>pivot)
+              if(d>pivot)
 				data2[y++] = d;
 			
 		}
@@ -553,10 +557,10 @@ __device__ void blockSort(T *input, T *output, int size)
 		// subsequence. Write it to the final destination since this pivot
 		// is always correctly sorted
         // ignore this step because we don't differentiate between greater and equal
-        /*		for(unsigned int i=from+lblock[BLOCK_SIZE]+tx;i<to-rblock[BLOCK_SIZE];i+=BLOCK_SIZE)
+        for(unsigned int i=from+lblock[BLOCK_SIZE]+tx;i<to-rblock[BLOCK_SIZE];i+=BLOCK_SIZE)
 		{
 			output[i]=pivot;
-            }*/
+        }
 
 		__syncthreads();
 
@@ -567,6 +571,26 @@ __device__ void blockSort(T *input, T *output, int size)
 	__syncthreads();
 
 }
+
+
+
+
+
+/*! in-place block level bitonic sort on small arrays
+ * @param up_dir true if ascending, false if descending
+ * @param inout input and output buffer
+ * @param size: must be power of 2
+ */
+template <class T>
+__device__ void blockBitonicSort(bool up_dir, T *input, int size)
+{
+  if (size <=1 )
+    return;
+  
+}
+
+
+
 
 // template <class T, int BLOCK_SIZE>
 // __global__ void sort_block_global(T *input, T *output, 
