@@ -90,6 +90,7 @@ namespace jusha {
     template void fill(thrust::device_ptr<double> begin, thrust::device_ptr<double> end, const double&val);
     template void fill(thrust::device_ptr<float> begin, thrust::device_ptr<float> end, const float&val);
     template void fill(thrust::device_ptr<int> begin, thrust::device_ptr<int> end, const int&val);
+    template void fill(thrust::device_ptr<unsigned int> begin, thrust::device_ptr<unsigned int> end, const unsigned int&val);
     template void fill(thrust::device_ptr<float2> begin, thrust::device_ptr<float2> end, const float2&val);
     template void fill(thrust::device_ptr<float4> begin, thrust::device_ptr<float4> end, const float4&val);
 
