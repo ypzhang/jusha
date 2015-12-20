@@ -1,5 +1,6 @@
 #include <catch.hpp>
 #include <thrust/scan.h>
+#include <thrust/sort.h>
 #include "utility.h"
 
 #include "cuda/cuda_intrinsic.hpp"
@@ -30,10 +31,46 @@ TEST_CASE( "BlockSum", "[sum]" ) {
 }
 
 
-template <bool exclusive = true>
-__global__ void scan_kernel(int *scan, int size) {
-  jusha::cuda::blockScan<int, thrust::plus<int>, 1024, exclusive>(scan, scan+size);
+template <typename T, bool exclusive = true>
+__global__ void scan_kernel(T *scan, int size) {
+  jusha::cuda::blockScan<T, thrust::plus<T>, 1024, exclusive>(scan, scan+size);
 }
+
+static void scan_test(int size) {
+  cuda::MirroredArray<unsigned int> to_scan((size));
+  cuda::MirroredArray<unsigned int> to_scan_gold((size));
+  //  cuda::MirroredArray<unsigned int> scan_done(size);
+  to_scan.randomize();
+  //  to_scan.fill(1);
+  to_scan_gold = to_scan;
+  //  cuda::MirroredArray<unsigned int> scan_golden(to_sort);  
+  scan_kernel<unsigned int, false><<<1, 1024>>>(to_scan.getGpuPtr(), size);
+
+  thrust::inclusive_scan(to_scan_gold.gbegin(), to_scan_gold.gbegin()+size, to_scan_gold.gbegin());
+  //  to_scan_gold.print("gold", to_scan_gold.size());
+  //  to_scan.print("cand", to_scan.size());
+  if(!to_scan_gold.isEqualTo(to_scan)){
+    printf("size %d testing failed\n", size);
+    to_scan_gold.print("gold", to_scan_gold.size());
+    to_scan.print("cand", to_scan.size());
+
+  }
+  REQUIRE(to_scan_gold.isEqualTo(to_scan));
+}
+
+TEST_CASE( "BlockScanRandom", "[scan]" ) { 
+    for (int nruns = 0; nruns < 200; nruns++) {
+      int size =rand() % 3000; 
+      scan_test(size);
+    }
+  
+}
+
+TEST_CASE( "BlockScanSingle", "[scan]" ) { 
+  int size = 2335;
+  scan_test(size);
+}
+
 
 TEST_CASE( "BlockScan", "[scan]" ) { 
   {
@@ -42,7 +79,7 @@ TEST_CASE( "BlockScan", "[scan]" ) {
   for (auto i = 0; i != to_scan.size(); i++)
     scan_ptr[i] = (int)1;
 
-  scan_kernel<true><<<1, 1024>>>(to_scan.getGpuPtr(), to_scan.size());
+  scan_kernel<int, true><<<1, 1024>>>(to_scan.getGpuPtr(), to_scan.size());
   //    to_scan.print("scan result", to_scan.size());
   REQUIRE((to_scan.size()-1) == to_scan[479]);
   }
@@ -53,7 +90,7 @@ TEST_CASE( "BlockScan", "[scan]" ) {
   for (auto i = 0; i != to_scan.size(); i++)
     scan_ptr[i] = (int)1;
 
-  scan_kernel<false><<<1, 1024>>>(to_scan.getGpuPtr(), to_scan.size());
+  scan_kernel<int, false><<<1, 1024>>>(to_scan.getGpuPtr(), to_scan.size());
   REQUIRE(to_scan.size() == to_scan[2799]);
   //    to_scan.print("scan result", to_scan.size());
 
@@ -74,7 +111,10 @@ static void sort_test(int size, bool zero = true) {
     to_sort.fill(0); //randomize();
   else
     to_sort.randomize();
+  cuda::MirroredArray<unsigned int> sort_golden(to_sort);  
   sort_kernel<<<1, 1024>>>(to_sort.getGpuPtr(), sort_done.getGpuPtr(), to_sort.size());
+  thrust::sort(sort_golden.gbegin(), sort_golden.gend());
+  REQUIRE(sort_golden.isEqualTo(sort_done));
   REQUIRE(sort_done.isFSorted(0, sort_done.size() == true));
 }
 
@@ -89,7 +129,9 @@ TEST_CASE( "BlockSortCorner", "[random]" ) {
     for (int size = 201; size < 21000; size*=10) {
       sort_test(size);
     }
-
+    for (int nruns = 0; nruns < 2000; nruns++) {
+      sort_test(rand() % 300000, (rand() % 10) == 0? true: false);
+    }
   }
 
 TEST_CASE( "BlockSort", "[sort]" ) { 
