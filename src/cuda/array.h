@@ -146,7 +146,7 @@ namespace jusha {
       }
       // dangerous, used at your own risk!
       // does not check size consistency
-      void setGpuPtr(T *ptr, bool needToFree=false)
+      void setGpuPtr(T *ptr,  int _size, bool needToFree=false)
       {
 #if USE_SHARED_PTR
         if (!needToFree)
@@ -165,12 +165,13 @@ namespace jusha {
         dvceBase = ptr;
 #endif
 	//        isCpuValid = false;
+        mSize = _size;
         isGpuValid = true;
-	gpuNeedToFree = needToFree;
+        gpuNeedToFree = needToFree;
         gpuAllocated = true;
       }
       
-      void setPtr(T *ptr)
+      void setPtr(T *ptr, int _size)
       {
 #if USE_SHARED_PTR
         hostBase.reset(ptr);
@@ -179,9 +180,10 @@ namespace jusha {
           gHeapManager.NeFree(CPU_HEAP, hostBase, sizeof(T)*mSize);
         hostBase = ptr;
 #endif
+        mSize = _size;
         isCpuValid = true;
         cpuAllocated = true;
-	cpuNeedToFree = false;
+        cpuNeedToFree = false;
 	//        mCapacity = -1; // to disable calling free	
       }
       

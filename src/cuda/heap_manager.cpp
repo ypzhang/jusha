@@ -55,15 +55,15 @@ namespace jusha {
       {
         // init gpu allocator if not exist
 #ifdef USE_CUDA_ALLOCATOR
-        size_t free, total;
-        cudaMemGetInfo(&free, &total);
-        check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
         cudaMalloc(addr, size);
 #ifdef _DEBUG
         count++;
         printf("alocating GPU %p for size %ld count = %d\n", *addr, size, count);
 #endif
         if (size && (*addr == 0))  {
+          size_t free, total;
+          cudaMemGetInfo(&free, &total);
+          check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
           printf("allocating memory size %ld failed, total %ld, free %ld\n", size, total, free);
         }
         check_cuda_error("cudaMalloc", __FILE__, __LINE__);
