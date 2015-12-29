@@ -1,4 +1,5 @@
 #include <thrust/transform.h>
+#include <thrust/transform_reduce.h>
 #include <thrust/fill.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/functional.h>
@@ -113,6 +114,44 @@ namespace jusha {
   template void addConst(JVector<long long> &vec, long long);  
   template void addConst(JVector<float> &vec, float);
   template void addConst(JVector<long> &vec, long);  
+
+
+
+  /*********************************************************************************
+         norm
+   *********************************************************************************/
+  template <typename T>
+struct square
+  {
+    __host__ __device__
+    T operator()(const T& x) const { 
+      return x * x;
+    }
+  };
+  // Implementation
+  template <class T>
+    T norm(const JVector<T> &vec)
+  {
+    if (!vec.size()) return 0.0;
+    // prefer GPU implementation
+    if (vec.GpuHasLatest())  {
+      square<T>        unary_op;
+      thrust::plus<T> binary_op;
+      return std::sqrt( thrust::transform_reduce(vec.gbegin(), vec.gend(), unary_op, 0.0, binary_op) );
+    } else {
+      assert(vec.CpuHasLatest());
+      T sum(0.0);
+      const T* vec_ptr = vec.getReadOnlyPtr();
+      for (int i = 0; i != vec.size(); i++)
+        sum += vec_ptr[i] * vec_ptr[i];
+      return std::sqrt(sum);
+    }
+  }
+
+  // Instantiation
+  template float norm (const JVector<float> &vec);
+  template double norm (const JVector<double> &vec);
+
   /*********************************************************************************
          Next
    *********************************************************************************/

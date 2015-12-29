@@ -907,7 +907,7 @@ namespace jusha {
 
   // norm 
   template <class T>
-    void norm(const JVector<T> &vec);
+    T norm(const JVector<T> &vec);
 
   template <class T>
   void addConst(JVector<T> &vec, T val);
