@@ -899,7 +899,7 @@ namespace jusha {
     class BatchInitializer {
     public:
       
-      void push_back(MirroredArray<T> *array, int val) {
+      void push_back(MirroredArray<T> *array, T val) {
         m_arrays.push_back(array);
         m_vals.push_back(val);
         assert(m_arrays.size() < BATCH);
