@@ -4,9 +4,49 @@
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/functional.h>
 #include <algorithm>
+#include "./for_each.hpp"
 #include "./array.h"
 
 namespace jusha {
+  namespace cuda {
+    // A simple kernel to initialize a batch of (ptr, size) pairs.
+    template <typename Batch, typename T>
+    __global__ void batch_fill_kernel(Batch batch, T val)
+    {
+      int id = blockIdx.x;
+      T *ptr = batch.ptrs[id];
+      size_t size = batch.sizes[id];
+      for (size_t tid = threadIdx.x; tid < size; tid += blockDim.x) {
+        ptr[tid] = val;
+      }
+    }
+
+    template <typename T, int BATCH>
+    void BatchInitializer<T, BATCH>::init(const T& val, cudaStream_t stream) {
+      BatchInitializer<T,BATCH>::BatchInit init;
+      if (m_arrays.size() > BATCH)
+        std::cerr << "Number of arrays " << m_arrays.size() << 
+          " exceeding template BATCH " << BATCH << ", please increase BATCH." << std::endl;
+      for (int i = 0; i != m_arrays.size(); i++) {
+        init.ptrs[i] = m_arrays[i]->getOverwriteGpuPtr();
+        init.sizes[i] = m_arrays[i]->size();
+      }
+      batch_fill_kernel<BatchInitializer<T, BATCH>::BatchInit, T> 
+        <<<m_arrays.size(), 128, 0, stream>>>(init, val);
+    }
+
+    template class BatchInitializer<float, 4>;
+    template class BatchInitializer<float, 8>;
+    template class BatchInitializer<float, 12>;
+    template class BatchInitializer<float, 16>;
+
+    template class BatchInitializer<double, 4>;
+    template class BatchInitializer<double, 8>;
+    template class BatchInitializer<double, 12>;
+    template class BatchInitializer<double, 16>;
+  }
+
+
 
   /*********************************************************************************
          Multiply
@@ -69,10 +109,24 @@ namespace jusha {
       thrust::fill(begin, end, val);      
     }
 
+  
+  template <class T>
+    class fill_run_nv: public nvstd::function<void(T)> {
+    public:
+      __device__ void operator()(int gid, thrust::tuple<T*, T> &tuple) const {
+        thrust::get<0>(tuple)[gid] = thrust::get<1>(tuple);
+      }
+    };
+
     template <typename T>
     void fill(thrust::device_ptr<T> begin, thrust::device_ptr<T> end, const T&val)
     {
+#if 0 // thrust call
       thrust::fill(begin, end, val);
+#else
+      ForEachKernel<StridePolicy, JC_cuda_blocksize, false> kernel(end-begin, "Fill"); 
+      kernel.run<fill_run_nv<T>, T*, T>(thrust::raw_pointer_cast(begin), val);
+#endif
     }
     
     // // Instantiation

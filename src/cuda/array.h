@@ -126,14 +126,14 @@ namespace jusha {
       {
         init_state();
         resize(rhs.size());
-        cudaMemcpy(getGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
+        cudaMemcpy(getOverwriteGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
       }
 
       void operator=(const std::vector<T> &rhs)
       {
         //        init_state();
         resize(rhs.size());
-        cudaMemcpy(getGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
+        cudaMemcpy(getOverwriteGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
       }
 
 
@@ -891,6 +891,28 @@ namespace jusha {
     };
 
 
+
+    /*! Help class to initialize multiple vectors at the same time
+     *  
+     */
+    template <class T, int BATCH>
+    class BatchInitializer {
+    public:
+      
+      void push_back(MirroredArray<T> *array) {
+        m_arrays.push_back(array);
+        assert(m_arrays.size() < BATCH);
+      }
+      void init(const T &val, cudaStream_t stream = 0);
+
+      struct BatchInit {
+        T *ptrs[BATCH];
+        size_t sizes[BATCH];
+      };
+
+    private:
+      std::vector<MirroredArray<T> *> m_arrays;
+    };
   } // cuda
 
 

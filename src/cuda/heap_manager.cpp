@@ -58,13 +58,16 @@ namespace jusha {
         cudaMalloc(addr, size);
 #ifdef _DEBUG
         count++;
-        printf("alocating GPU %p for size %ld count = %d\n", *addr, size, count);
+        printf("allocating GPU %p for size %ld count = %d\n", *addr, size, count);
 #endif
         if (size && (*addr == 0))  {
+          check_cuda_error_always("cudaMemGetInfo", __FILE__, __LINE__);	
+          int gpu = -1;
+          cudaGetDevice(&gpu);
           size_t free, total;
           cudaMemGetInfo(&free, &total);
           check_cuda_error("cudaMemGetInfo", __FILE__, __LINE__);	
-          printf("allocating memory size %ld failed, total %ld, free %ld\n", size, total, free);
+          printf("allocating memory size %ld failed on GPU %d, total %ld, free %ld\n", size, gpu, total, free);
         }
         check_cuda_error("cudaMalloc", __FILE__, __LINE__);
 #else
