@@ -11,10 +11,11 @@ namespace jusha {
   namespace cuda {
     // A simple kernel to initialize a batch of (ptr, size) pairs.
     template <typename Batch, typename T>
-    __global__ void batch_fill_kernel(Batch batch, T val)
+    __global__ void batch_fill_kernel(Batch batch)
     {
       int id = blockIdx.x;
       T *ptr = batch.ptrs[id];
+      T val = batch.vals[id];
       size_t size = batch.sizes[id];
       for (size_t tid = threadIdx.x; tid < size; tid += blockDim.x) {
         ptr[tid] = val;
@@ -22,7 +23,7 @@ namespace jusha {
     }
 
     template <typename T, int BATCH>
-    void BatchInitializer<T, BATCH>::init(const T& val, cudaStream_t stream) {
+    void BatchInitializer<T, BATCH>::init(cudaStream_t stream) {
       BatchInitializer<T,BATCH>::BatchInit init;
       if (m_arrays.size() > BATCH)
         std::cerr << "Number of arrays " << m_arrays.size() << 
@@ -30,9 +31,10 @@ namespace jusha {
       for (int i = 0; i != m_arrays.size(); i++) {
         init.ptrs[i] = m_arrays[i]->getOverwriteGpuPtr();
         init.sizes[i] = m_arrays[i]->size();
+        init.vals[i] = m_vals[i];
       }
       batch_fill_kernel<BatchInitializer<T, BATCH>::BatchInit, T> 
-        <<<m_arrays.size(), 128, 0, stream>>>(init, val);
+        <<<m_arrays.size(), 1024, 0, stream>>>(init);
     }
 
     template class BatchInitializer<float, 4>;

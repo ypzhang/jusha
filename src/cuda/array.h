@@ -899,19 +899,22 @@ namespace jusha {
     class BatchInitializer {
     public:
       
-      void push_back(MirroredArray<T> *array) {
+      void push_back(MirroredArray<T> *array, int val) {
         m_arrays.push_back(array);
+        m_vals.push_back(val);
         assert(m_arrays.size() < BATCH);
       }
-      void init(const T &val, cudaStream_t stream = 0);
+      void init(cudaStream_t stream = 0);
 
       struct BatchInit {
         T *ptrs[BATCH];
         size_t sizes[BATCH];
+        T vals[BATCH];
       };
 
     private:
       std::vector<MirroredArray<T> *> m_arrays;
+      std::vector<T> m_vals;
     };
   } // cuda
 
