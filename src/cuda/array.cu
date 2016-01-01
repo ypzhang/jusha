@@ -23,24 +23,26 @@ namespace jusha {
     }
 
     template <typename T, int BATCH>
-    void BatchInitializer<T, BATCH>::init(cudaStream_t stream) {
-      BatchInitializer<T,BATCH>::BatchInit init;
-      if (m_arrays.size() > BATCH)
-        std::cerr << "Number of arrays " << m_arrays.size() << 
-          " exceeding template BATCH " << BATCH << ", please increase BATCH." << std::endl;
-      for (int i = 0; i != m_arrays.size(); i++) {
-        init.ptrs[i] = m_arrays[i]->getOverwriteGpuPtr();
-        init.sizes[i] = m_arrays[i]->size();
-        init.vals[i] = m_vals[i];
-      }
-      batch_fill_kernel<BatchInitializer<T, BATCH>::BatchInit, T> 
-        <<<m_arrays.size(), 1024, 0, stream>>>(init);
+    void batch_fill_wrapper(int num_arrays, const BatchInit<T, BATCH> &init, cudaStream_t stream)
+    {
+      batch_fill_kernel<BatchInit<T, BATCH>, T> 
+        <<<num_arrays, 1024, 0, stream>>>(init);
     }
+
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 4> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 8> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 12> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 16> &init, cudaStream_t stream);
 
     template class BatchInitializer<float, 4>;
     template class BatchInitializer<float, 8>;
     template class BatchInitializer<float, 12>;
     template class BatchInitializer<float, 16>;
+
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 4> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 8> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 12> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 16> &init, cudaStream_t stream);
 
     template class BatchInitializer<double, 4>;
     template class BatchInitializer<double, 8>;

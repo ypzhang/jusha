@@ -891,6 +891,15 @@ namespace jusha {
     };
 
 
+    template <typename T, int BATCH>
+    struct BatchInit {
+      T *ptrs[BATCH];
+      size_t sizes[BATCH];
+      T vals[BATCH];
+    };
+
+    template <typename T, int BATCH>
+    void batch_fill_wrapper(int num_arrays, const BatchInit<T, BATCH> &init, cudaStream_t stream);
 
     /*! Help class to initialize multiple vectors at the same time
      *  
@@ -904,13 +913,19 @@ namespace jusha {
         m_vals.push_back(val);
         assert(m_arrays.size() < BATCH);
       }
-      void init(cudaStream_t stream = 0);
+      void init(cudaStream_t stream = 0) {
+        BatchInit<T, BATCH> init;
+        if (m_arrays.size() > BATCH)
+          std::cerr << "Number of arrays " << m_arrays.size() << 
+            " exceeding template BATCH " << BATCH << ", please increase BATCH." << std::endl;
+        for (int i = 0; i != m_arrays.size(); i++) {
+          init.ptrs[i] = m_arrays[i]->getOverwriteGpuPtr();
+          init.sizes[i] = m_arrays[i]->size();
+          init.vals[i] = m_vals[i];
+        }
+        batch_fill_wrapper<T, BATCH>(m_arrays.size(), init, stream);
+      }
 
-      struct BatchInit {
-        T *ptrs[BATCH];
-        size_t sizes[BATCH];
-        T vals[BATCH];
-      };
 
     private:
       std::vector<MirroredArray<T> *> m_arrays;
