@@ -104,14 +104,14 @@ namespace jusha {
 #ifdef USE_SHARED_PTR
           gHeapManager.NeFree(GPU_HEAP, dvceBase.get());
 #else
-        gHeapManager.NeFree(GPU_HEAP, dvceBase, size()*sizeof(T));
+          gHeapManager.NeFree(GPU_HEAP, dvceBase, size()*sizeof(T));
 #endif
-	dvceBase = NULL;
-	}
+          dvceBase = NULL;
+        }
         if (hostBase && mCapacity > 0 && cpuNeedToFree) {
           gHeapManager.NeFree(CPU_HEAP, hostBase, size()*sizeof(T));
-	  hostBase = NULL;	  
-	}
+          hostBase = NULL;	  
+        }
         init_state();
       }
       // Copy Constructor
@@ -266,6 +266,36 @@ namespace jusha {
       int size() const
       {
         return mSize;
+      }
+      
+      /*! A clean version of resize.
+        It does not copy the old data, 
+        nor does it initialize the data 
+      */
+      void clean_resize(int64_t _size) {
+        if (mCapacity >= _size || _size == 0)  {
+          mSize = _size;
+          isGpuValid = false;
+          isCpuValid = false;
+          return;
+        }
+        if (_size > 0)  {
+          // depending on previous state
+          if (gpuAllocated) {
+            if (dvceBase)
+              gHeapManager.NeFree(GPU_HEAP, dvceBase, mCapacity*sizeof(T));
+            gHeapManager.NeMalloc(GPU_HEAP, (void**)&dvceBase, _size * sizeof(T));
+            isGpuValid = false;
+          }
+          if (cpuAllocated) {
+            if (hostBase)
+              gHeapManager.NeFree(CPU_HEAP, hostBase, mCapacity*sizeof(T));
+            gHeapManager.NeMalloc(CPU_HEAP, (void**)&hostBase, _size * sizeof(T));
+            isCpuValid = false;
+          }
+          mSize = _size;
+          mCapacity = _size;
+        }
       }
 
       void resize(int64_t _size) 
