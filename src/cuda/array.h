@@ -125,14 +125,14 @@ namespace jusha {
       explicit MirroredArray(const std::vector<T> &rhs)
       {
         init_state();
-        resize(rhs.size());
+        clean_resize(rhs.size());
         cudaMemcpy(getOverwriteGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
       }
 
       void operator=(const std::vector<T> &rhs)
       {
         //        init_state();
-        resize(rhs.size());
+        clean_resize(rhs.size());
         cudaMemcpy(getOverwriteGpuPtr(), rhs.data(), size()*sizeof(T), cudaMemcpyDefault);
       }
 
@@ -140,7 +140,7 @@ namespace jusha {
       /* Init from raw pointers
        */
       void init(const T *ptr, size_t _size) {
-        resize(_size);
+        clean_resize(_size);
         T *g_ptr = getGpuPtr();
         cudaMemcpy(g_ptr, ptr, sizeof(T) * _size, cudaMemcpyDefault);
       }
@@ -197,7 +197,7 @@ namespace jusha {
       // deep copy from
       void deep_copy(const MirroredArray<T> &src) 
       {
-        resize(src.size());
+        clean_resize(src.size());
         //        printf("deep copy src gpuvalid %d my gpuvalid %d gpu alloc %d.\n", src.isGpuValid, isGpuValid, gpuAllocated);
         if (src.isGpuValid)
           {
@@ -224,7 +224,7 @@ namespace jusha {
       // deep copy to
       void clone(MirroredArray<T> &dst) const
       {
-        dst.resize(size());
+        dst.clean_resize(size());
         if (isGpuValid)
           {
             cudaMemcpy(dst.getGpuPtr(), getReadOnlyGpuPtr(), sizeof(T)*mSize, cudaMemcpyDeviceToDevice);
