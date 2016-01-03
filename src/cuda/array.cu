@@ -11,38 +11,56 @@ namespace jusha {
   namespace cuda {
     // A simple kernel to initialize a batch of (ptr, size) pairs.
     template <typename Batch, typename T>
-    __global__ void batch_fill_kernel(Batch batch)
+    __global__ void batch_fill_kernel(int num_arrays, int num_big_arrays, Batch batch)
     {
       int id = blockIdx.x;
-      T *ptr = batch.ptrs[id];
-      T val = batch.vals[id];
-      size_t size = batch.sizes[id];
-      for (size_t tid = threadIdx.x; tid < size; tid += blockDim.x) {
-        ptr[tid] = val;
+      
+      // small arrays are done by one block each
+      if (id < num_arrays) {
+        T *ptr = batch.ptrs[id];
+        T val = batch.vals[id];
+        size_t size = batch.sizes[id];
+        for (size_t tid = threadIdx.x; tid < size; tid += blockDim.x) {
+          ptr[tid] = val;
+        }
+      }
+      // all block takes part in initializing big array
+      for (int big_array = 0; big_array < num_big_arrays; big_array++) {
+        T *ptr = batch.big_ptrs[big_array];
+        T val = batch.vals2[big_array];
+        size_t size = batch.big_sizes[big_array];
+        for (size_t tid = threadIdx.x + blockIdx.x * blockDim.x;
+             tid < size; tid += blockDim.x * gridDim.x) {
+          ptr[tid] = val;
+        }
       }
     }
 
     template <typename T, int BATCH>
-    void batch_fill_wrapper(int num_arrays, const BatchInit<T, BATCH> &init, cudaStream_t stream)
+    void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<T, BATCH> &init, cudaStream_t stream)
     {
-      batch_fill_kernel<BatchInit<T, BATCH>, T> 
-        <<<num_arrays, 1024, 0, stream>>>(init);
+      int blocks = num_arrays;
+      if (num_big_arrays)
+        blocks = std::max(64, blocks);
+      if (blocks > 0)
+        batch_fill_kernel<BatchInit<T, BATCH>, T> 
+          <<<blocks, 1024, 0, stream>>>(num_arrays, num_big_arrays, init);
     }
 
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 4> &init, cudaStream_t stream);
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 8> &init, cudaStream_t stream);
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 12> &init, cudaStream_t stream);
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<float, 16> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 4> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 8> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 12> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 16> &init, cudaStream_t stream);
 
     template class BatchInitializer<float, 4>;
     template class BatchInitializer<float, 8>;
     template class BatchInitializer<float, 12>;
     template class BatchInitializer<float, 16>;
 
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 4> &init, cudaStream_t stream);
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 8> &init, cudaStream_t stream);
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 12> &init, cudaStream_t stream);
-    template void batch_fill_wrapper(int num_arrays, const BatchInit<double, 16> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 4> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 8> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 12> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 16> &init, cudaStream_t stream);
 
     template class BatchInitializer<double, 4>;
     template class BatchInitializer<double, 8>;

@@ -926,10 +926,14 @@ namespace jusha {
       T *ptrs[BATCH];
       size_t sizes[BATCH];
       T vals[BATCH];
+
+      T *big_ptrs[BATCH];
+      size_t big_sizes[BATCH];
+      T vals2[BATCH];
     };
 
     template <typename T, int BATCH>
-    void batch_fill_wrapper(int num_arrays, const BatchInit<T, BATCH> &init, cudaStream_t stream);
+    void batch_fill_wrapper(int num_small_arrays, int num_big_arrays, const BatchInit<T, BATCH> &init, cudaStream_t stream);
 
     /*! Help class to initialize multiple vectors at the same time
      *  
@@ -945,15 +949,26 @@ namespace jusha {
       }
       void init(cudaStream_t stream = 0) {
         BatchInit<T, BATCH> init;
+        memset(&init, sizeof(init), 0);
         if (m_arrays.size() > BATCH)
           std::cerr << "Number of arrays " << m_arrays.size() << 
             " exceeding template BATCH " << BATCH << ", please increase BATCH." << std::endl;
+        int small_idx = 0, big_idx = 0;
         for (int i = 0; i != m_arrays.size(); i++) {
-          init.ptrs[i] = m_arrays[i]->getOverwriteGpuPtr();
-          init.sizes[i] = m_arrays[i]->size();
-          init.vals[i] = m_vals[i];
+          size_t _size = m_arrays[i]->size();
+          if (_size < 100000)  {
+            init.ptrs[small_idx] = m_arrays[i]->getOverwriteGpuPtr();
+            init.sizes[small_idx] = _size;
+            init.vals[small_idx] = m_vals[i];
+            ++small_idx;
+          } else {
+            init.big_ptrs[big_idx] = m_arrays[i]->getOverwriteGpuPtr();
+            init.big_sizes[big_idx] = _size;
+            init.vals2[big_idx] = m_vals[i];
+            ++big_idx;
+          }
         }
-        batch_fill_wrapper<T, BATCH>(m_arrays.size(), init, stream);
+        batch_fill_wrapper<T, BATCH>(small_idx, big_idx, init, stream);
       }
 
 
