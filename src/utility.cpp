@@ -51,10 +51,11 @@ double jusha_get_wtime()
     fprintf(out, "stack trace:\n");
 
     // storage array for stack trace address data
-    void* addrlist[max_frames+1];
+    std::vector<void*> addrlist(max_frames+1);
 
     // retrieve current stack addresses
-    int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
+
+    int addrlen = backtrace(addrlist, max_frames+1);
     if (addrlen == 0) {
       fprintf(out, "  <empty, possibly corrupt>\n");
       return;
@@ -62,7 +63,7 @@ double jusha_get_wtime()
 
     // resolve addresses into strings containing "filename(function+address)",
     // this array must be free()-ed
-    char** symbollist = backtrace_symbols(addrlist, addrlen);
+    char** symbollist = backtrace_symbols(addrlist.data(), addrlen);
 
     // allocate string which will be filled with the demangled function name
     size_t funcnamesize = 256;
