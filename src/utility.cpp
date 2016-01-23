@@ -1,5 +1,5 @@
 #include <chrono>
-
+#include <vector>
 #include <execinfo.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -55,7 +55,7 @@ double jusha_get_wtime()
 
     // retrieve current stack addresses
 
-    int addrlen = backtrace(addrlist, max_frames+1);
+    int addrlen = backtrace(addrlist.data(), max_frames+1);
     if (addrlen == 0) {
       fprintf(out, "  <empty, possibly corrupt>\n");
       return;

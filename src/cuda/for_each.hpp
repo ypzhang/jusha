@@ -64,6 +64,7 @@ namespace jusha {
 
     template <class Method, class... Args>
     void run(Args... args) {
+      if (m_N == 0) return;
       int blocks = GET_BLOCKS(m_N, m_block_size);
       int BS = m_block_size; //jusha::cuda::JCKonst::cuda_blocksize;
       if (m_auto_tuning) {
@@ -73,6 +74,9 @@ namespace jusha {
                                            0, m_N);
         //        gridsize = GET_BLOCKS(m_N, blocksize);
         //        gridsize = 120;
+        // sometimes CUDA API returns 0, a possible bug in CUDA
+        if (blocksize == 0) 
+          blocksize = m_block_size;
         BS = blocksize;
         blocks = GET_BLOCKS(m_N, blocksize);
         blocks = std::min(blocks, 8 * min_gridsize);
