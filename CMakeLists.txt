@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH
 message(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 
 # CUDA is always required.
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
 find_package(CUDA REQUIRED)
 
 
@@ -70,7 +71,7 @@ message(STATUS "Found OpenGL @ ${OPENGL_LIBRARIES}")
 #set(CUDA_SEPARABLE_COMPILATION ON)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
 #set(CUDA_PROPAGATE_HOST_FLAGS ON)
 
 
@@ -198,7 +199,7 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 
 #if(UNIX)
 #  add_library(jusha_c SHARED ${CPP_SRC_LIST} ${HEADERS_LIST})
-  cuda_add_library(jusha SHARED ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
+  cuda_add_library(jusha STATIC ${CU_SRC_LIST} ${CPP_SRC_LIST} ${HEADERS_LIST}
 	OPTIONS ${GENCODE_SM30} ${GENCODE_SM37} ${GENCODE_SM52} "-std=c++11" # "--relaxed-constexpr" # "--resource-usage" "-v"
 	RELEASE --use_fast_math;-g;-O3; ${GENCODE_SM37} ${GENCODE_SM30}  ${GENCODE_SM52} 
 	DEBUG -g;-O0;-DDEBUG; ${GENCODE_SM37} ${GENCODE_SM30}  ${GENCODE_SM52} 

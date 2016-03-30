@@ -51,21 +51,25 @@ namespace jusha {
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 8> &init, cudaStream_t stream);
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 12> &init, cudaStream_t stream);
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 16> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<float, 20> &init, cudaStream_t stream);
 
     template class BatchInitializer<float, 4>;
     template class BatchInitializer<float, 8>;
     template class BatchInitializer<float, 12>;
     template class BatchInitializer<float, 16>;
+    template class BatchInitializer<float, 20>;
 
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 4> &init, cudaStream_t stream);
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 8> &init, cudaStream_t stream);
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 12> &init, cudaStream_t stream);
     template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 16> &init, cudaStream_t stream);
+    template void batch_fill_wrapper(int num_arrays, int num_big_arrays, const BatchInit<double, 20> &init, cudaStream_t stream);
 
     template class BatchInitializer<double, 4>;
     template class BatchInitializer<double, 8>;
     template class BatchInitializer<double, 12>;
     template class BatchInitializer<double, 16>;
+    template class BatchInitializer<double, 20>;
   }
 
 

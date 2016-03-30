@@ -949,7 +949,7 @@ namespace jusha {
       }
       void init(cudaStream_t stream = 0) {
         BatchInit<T, BATCH> init;
-        memset(&init, sizeof(init), 0);
+        memset(&init, 0, sizeof(init));
         if (m_arrays.size() > BATCH)
           std::cerr << "Number of arrays " << m_arrays.size() << 
             " exceeding template BATCH " << BATCH << ", please increase BATCH." << std::endl;
